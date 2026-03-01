@@ -12,6 +12,10 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 ## Config
 - `configs/experiments/wosac-baseline.json`
 
+## Literature and References
+- `experiments/wosac-baseline/lit_survey.md`
+- `experiments/wosac-baseline/references/README.md`
+
 ## Inputs
 - Waymo Open Motion data access and challenge constraints.
 - Official submission format (`SimAgentsChallengeSubmission`).

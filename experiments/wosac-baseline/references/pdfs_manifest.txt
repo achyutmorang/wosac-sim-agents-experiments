@@ -1,0 +1,14 @@
+total 144928
+-rw-r--r--@ 1 achyutmorang  staff   2.5M Mar  1 20:46 behaviorgpt_2024.pdf
+-rw-r--r--@ 1 achyutmorang  staff   5.2M Mar  1 20:47 forsim_2026.pdf
+-rw-r--r--@ 1 achyutmorang  staff    14M Mar  1 20:46 multiverse_transformer_2023.pdf
+-rw-r--r--@ 1 achyutmorang  staff   4.1M Mar  1 20:47 reliable_simulated_driving_agents_2025.pdf
+-rw-r--r--@ 1 achyutmorang  staff    26M Mar  1 20:47 rift_2025.pdf
+-rw-r--r--@ 1 achyutmorang  staff   3.9M Mar  1 20:46 smart_2024.pdf
+-rw-r--r--@ 1 achyutmorang  staff   2.3M Mar  1 20:46 trafficbots_2023.pdf
+-rw-r--r--@ 1 achyutmorang  staff   362K Mar  1 20:46 trafficbots_v1_5_2024.pdf
+-rw-r--r--@ 1 achyutmorang  staff   476K Mar  1 20:46 trajtok_2025_arxiv.pdf
+-rw-r--r--@ 1 achyutmorang  staff   6.9M Mar  1 20:46 unimm_2025_arxiv.pdf
+-rw-r--r--@ 1 achyutmorang  staff   1.0M Mar  1 20:46 waymax_2023.pdf
+-rw-r--r--@ 1 achyutmorang  staff   469K Mar  1 20:47 wosac_2025_unimm_technical_report.pdf
+-rw-r--r--@ 1 achyutmorang  staff   1.6M Mar  1 20:46 wosac_challenge_2023_neurips_db.pdf

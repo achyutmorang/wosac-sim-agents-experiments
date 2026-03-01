@@ -4,6 +4,8 @@
 Establish a reproducible baseline submission pipeline and first valid metric snapshot for the WOSAC Sim Agents benchmark.
 
 ## Notebook
+- Open in Colab (smoke): https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb
+- Open in Colab (baseline): https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb
 - `experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb`
 - `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
 
@@ -23,6 +25,11 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 ## Results Artifacts
 - `experiments/wosac-baseline/results/README.md`
 - `experiments/wosac-baseline/results/baseline_v0_metrics.json`
+
+## Optional Evaluator Ingestion
+Set one of these environment variables before running Step 5 in the smoke notebook:
+- `WOSAC_OFFICIAL_METRICS_JSON`: path to evaluator JSON output
+- `WOSAC_OFFICIAL_METRICS_CSV`: path to CSV with `metric,value` columns
 
 ## Inputs
 - Waymo Open Motion data access and challenge constraints.

@@ -21,6 +21,8 @@ This repo intentionally follows the strongest structure from `waymax-simulation-
 
 ## Current Pack
 - `wosac-baseline`
+  - Open in Colab (smoke): [01_colab_smoke_test.ipynb](https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb)
+  - Open in Colab (baseline): [wosac_baseline_colab.ipynb](https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb)
   - Smoke notebook: `experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb`
   - Notebook: `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
   - Config: `configs/experiments/wosac-baseline.json`

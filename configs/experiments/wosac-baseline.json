@@ -2,9 +2,19 @@
   "slug": "wosac-baseline",
   "title": "WOSAC Baseline",
   "objective": "Establish first reproducible benchmark score before novelty attempts.",
+  "repo": {
+    "url": "https://github.com/achyutmorang/wosac-sim-agents-experiments.git",
+    "branch": "main",
+    "repo_dir": "/content/wosac-sim-agents-experiments"
+  },
   "run": {
-    "run_tag_prefix": "wosac_baseline",
+    "run_name": "dev",
+    "run_prefix": "wosac_baseline",
     "persist_root": "/content/drive/MyDrive/wosac_experiments",
+    "n_shards": 1,
+    "shard_id": 0,
+    "resume_from_existing": true,
+    "run_enabled": true,
     "n_rollouts_per_scenario": 32,
     "num_history_seconds": 1,
     "num_future_seconds": 8,

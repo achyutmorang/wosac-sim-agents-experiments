@@ -1,65 +1,59 @@
 # WOSAC Sim Agents Experiments
 
-Focused experimentation repository for the Waymo Open Sim Agents Challenge (WOSAC), built to avoid diffuse problem framing and maximize reproducible leaderboard progress.
+Colab-first repository for WOSAC research with thin notebooks, deterministic runtime bootstrap, and resumable Drive-backed artifacts.
 
-## Why This Pivot
-Your previous repository proved strong engineering discipline, but spread effort across multiple broad tracks (`closedloop-core`, `surprise-potential`, `risk-uq-suite`). This repo keeps one fixed target:
+## Why This Design
+This repo intentionally follows the strongest structure from `waymax-simulation-experiments`:
+- notebook orchestration only,
+- reusable Python modules in `src/`,
+- deterministic Colab setup,
+- explicit run manifests and resume contracts.
 
-- Task: WOSAC-style multi-agent closed-loop simulation.
-- Objective: improve benchmark metrics with rigorous baselines.
-- Process: fast, repeatable experiment cycles with clear stop/go criteria.
-
-## Fixed Problem Definition
-Given 1s history + map context, generate 32 joint 8s futures for all valid objects, following Sim Agents submission rules.
-
-Primary benchmark outputs (from official evaluator):
-- `realism_meta_metric` (higher is better; official ranking score)
-- `kinematic_metrics`
-- `interactive_metrics`
-- `map_based_metrics`
-
-Secondary diagnostics:
-- `min_ade`
-- `simulated_collision_rate`
-- `simulated_offroad_rate`
-- `simulated_traffic_light_violation_rate`
-
-Official metric code and config are in the Waymo Open Dataset repository and linked in [references/leaderboard_2025.md](references/leaderboard_2025.md).
-
-## Repository Layout
-- `experiments/`: experiment packs with one objective each.
-- `configs/experiments/`: central runtime and baseline configs.
-- `references/`: leaderboard methods, reports, and code-status tracking.
-- `notes/`: research decisions, failures, and thesis-ready reflections.
-- `scripts/`: small automation scripts for scaffolding and repo sync.
-- `src/experiments/`: reusable experiment-pack scaffolding helpers.
+## Colab-First Structure
+- `requirements-colab.txt`: locked Colab dependency set.
+- `scripts/colab_setup.py`: deterministic environment install/probe/restart handling.
+- `src/platform/`: Colab bootstrap, repo sync, Drive mount, setup cache, runtime profiles.
+- `notebooks/NOTEBOOK_DESIGN_CONTRACT.md`: required notebook execution contract.
+- `notebooks/templates/`: starter Colab template.
+- `experiments/<slug>/notebooks/`: experiment-specific Colab notebooks.
+- `configs/experiments/`: runtime/config JSON per experiment.
+- `src/workflows/`: notebook-facing orchestration APIs.
 
 ## Current Pack
-- `wosac-baseline`: minimal reproducible baseline to establish your first credible score before attempting novel modifications.
+- `wosac-baseline`
+  - Notebook: `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
+  - Config: `configs/experiments/wosac-baseline.json`
+  - Workflow: `src/workflows/wosac_baseline_flow.py`
 
-## Week-1 Execution Plan
-1. Reproduce a complete submission flow from the official Waymo tutorial.
-2. Freeze one baseline config in `configs/experiments/wosac-baseline.json`.
-3. Record first metric snapshot in `notes/` with date and commit hash.
-4. Change one variable at a time (architecture, rollout policy, or training objective).
-5. Keep/rollback changes strictly based on benchmark deltas.
+## Colab Run Order (Baseline)
+1. Open the baseline notebook in Colab.
+2. Run Step 1 cell (repo sync + runtime bootstrap).
+3. If restart is requested, restart runtime and rerun Step 1.
+4. Run config + fast-fail cells.
+5. Execute experiment-specific cells and persist artifacts in Drive.
 
-## Leaderboard Method Tracking
-Top-2025 methods and code availability status are tracked in [references/leaderboard_2025.md](references/leaderboard_2025.md).
-
-## SMART and TrajTok Context
-A compact SMART-oriented reading and implementation map is tracked in [references/smart.md](references/smart.md).
-
-## Quick Start
+## Scaffolding New Experiments
 ```bash
-cd wosac-sim-agents-experiments
 python3 scripts/new_experiment.py \
   --slug my-variant \
   --title "My Variant" \
-  --objective "Test one concrete change against wosac-baseline"
+  --objective "Test one controlled change against wosac-baseline"
 ```
 
-## Scope Guardrails
-- No new research direction unless baseline is stable and measurable.
-- No multi-track branching until one main track has repeatable gains.
-- No claims without metric deltas on official challenge outputs.
+Generated files:
+- `experiments/<slug>/README.md`
+- `experiments/<slug>/notebooks/<slug>_colab.ipynb`
+- `configs/experiments/<slug>.json`
+- `src/workflows/<slug>_flow.py`
+- `src/experiments/papers/<slug>/__init__.py`
+
+## Public References
+- Leaderboard/report/code status: `references/leaderboard_2025.md`
+- SMART context: `references/smart.md`
+- Public external repos (local clones): `./scripts/fetch_public_repos.sh`
+
+## Local Tests
+```bash
+pip install -r requirements-dev.txt
+PYTHONPATH=. pytest -q
+```

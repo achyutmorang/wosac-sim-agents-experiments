@@ -3,6 +3,15 @@
 ## Objective
 Establish a reproducible baseline submission pipeline and first valid metric snapshot for the WOSAC Sim Agents benchmark.
 
+## Notebook
+- `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
+
+## Workflow Entrypoint
+- `src/workflows/wosac_baseline_flow.py`
+
+## Config
+- `configs/experiments/wosac-baseline.json`
+
 ## Inputs
 - Waymo Open Motion data access and challenge constraints.
 - Official submission format (`SimAgentsChallengeSubmission`).

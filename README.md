@@ -21,9 +21,12 @@ This repo intentionally follows the strongest structure from `waymax-simulation-
 
 ## Current Pack
 - `wosac-baseline`
+  - Smoke notebook: `experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb`
   - Notebook: `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
   - Config: `configs/experiments/wosac-baseline.json`
   - Workflow: `src/workflows/wosac_baseline_flow.py`
+  - Contract: `experiments/wosac-baseline/experiment_contract.md`
+  - Results: `experiments/wosac-baseline/results/baseline_v0_metrics.json`
 
 ## Colab Run Order (Baseline)
 1. Open the baseline notebook in Colab.

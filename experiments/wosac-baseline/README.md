@@ -4,6 +4,7 @@
 Establish a reproducible baseline submission pipeline and first valid metric snapshot for the WOSAC Sim Agents benchmark.
 
 ## Notebook
+- `experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb`
 - `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
 
 ## Workflow Entrypoint
@@ -15,6 +16,13 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 ## Literature and References
 - `experiments/wosac-baseline/lit_survey.md`
 - `experiments/wosac-baseline/references/README.md`
+
+## Experiment Contract
+- `experiments/wosac-baseline/experiment_contract.md`
+
+## Results Artifacts
+- `experiments/wosac-baseline/results/README.md`
+- `experiments/wosac-baseline/results/baseline_v0_metrics.json`
 
 ## Inputs
 - Waymo Open Motion data access and challenge constraints.

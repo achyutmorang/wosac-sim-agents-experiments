@@ -20,6 +20,8 @@ def test_smart_baseline_flow_ready_without_sync(tmp_path: Path) -> None:
     assert bundle.summary["smart_repo_sync"]["mode"] == "skipped"
     assert "setup_cmd" in bundle.command_plan
     assert "train_cmd" in bundle.command_plan
+    assert "python val.py" in bundle.command_plan["validate_cmd"]
+    assert "eval.py" not in bundle.command_plan["validate_cmd"]
     assert "summary_json" in bundle.artifacts
     assert "command_plan_json" in bundle.artifacts
 

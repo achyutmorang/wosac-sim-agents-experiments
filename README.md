@@ -34,6 +34,8 @@ This repo intentionally follows the strongest structure from `waymax-simulation-
   - Notebook: `experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb`
   - Config: `configs/experiments/smart-baseline.json`
   - Workflow: `src/workflows/smart_baseline_flow.py`
+  - One-command runner: `scripts/run_smart_baseline.py`
+  - Repro notes: `experiments/smart-baseline/reproducibility.md`
   - Results: `experiments/smart-baseline/results/smart_baseline_v0_metrics.json`
 
 ## Colab Run Order (Baseline)

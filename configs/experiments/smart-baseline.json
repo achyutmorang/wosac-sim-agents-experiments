@@ -1,0 +1,46 @@
+{
+  "evaluation": {
+    "primary_metric": "realism_meta_metric",
+    "report_metrics": [
+      "kinematic_metrics",
+      "interactive_metrics",
+      "map_based_metrics",
+      "min_ade",
+      "simulated_collision_rate",
+      "simulated_offroad_rate",
+      "simulated_traffic_light_violation_rate"
+    ]
+  },
+  "objective": "Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned reporting.",
+  "repo": {
+    "branch": "main",
+    "repo_dir": "/content/wosac-sim-agents-experiments",
+    "url": "https://github.com/achyutmorang/wosac-sim-agents-experiments.git"
+  },
+  "run": {
+    "n_shards": 1,
+    "notes": "Use this as external benchmark baseline before Gap-2 method changes.",
+    "num_future_seconds": 8,
+    "num_history_seconds": 1,
+    "n_rollouts_per_scenario": 32,
+    "persist_root": "/content/drive/MyDrive/wosac_experiments",
+    "resume_from_existing": true,
+    "run_enabled": true,
+    "run_name": "dev",
+    "run_prefix": "smart_baseline",
+    "shard_id": 0
+  },
+  "slug": "smart-baseline",
+  "smart": {
+    "branch": "main",
+    "ckpt_path": "",
+    "install_pyg": true,
+    "processed_data_root": "/content/SMART/data/waymo_processed",
+    "raw_data_root": "/content/SMART/data/waymo/scenario",
+    "repo_dir": "/content/SMART",
+    "repo_url": "https://github.com/rainmaker22/SMART.git",
+    "train_config": "configs/train/train_scalable.yaml",
+    "val_config": "configs/validation/validation_scalable.yaml"
+  },
+  "title": "SMART Baseline Wrapper"
+}

@@ -28,6 +28,26 @@ _PACKS: Sequence[ExperimentPack] = (
         ),
         tags=("wosac", "sim-agents", "baseline", "colab", "waymax", "womd"),
     ),
+    ExperimentPack(
+        slug="smart-baseline",
+        title="SMART Baseline Wrapper",
+        objective="Reproduce SMART baseline with thin wrapper flow and WOSAC-aligned reporting.",
+        notebooks=(
+            "experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb",
+        ),
+        workflows=(
+            "src/workflows/smart_baseline_flow.py",
+        ),
+        modules=(
+            "src/workflows/smart_baseline_flow.py",
+            "src/workflows/experiment_flow.py",
+            "src/platform",
+        ),
+        config_paths=(
+            "configs/experiments/smart-baseline.json",
+        ),
+        tags=("wosac", "sim-agents", "smart", "baseline", "colab", "external-wrapper"),
+    ),
 )
 
 

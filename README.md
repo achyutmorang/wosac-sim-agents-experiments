@@ -29,6 +29,12 @@ This repo intentionally follows the strongest structure from `waymax-simulation-
   - Workflow: `src/workflows/wosac_baseline_flow.py`
   - Contract: `experiments/wosac-baseline/experiment_contract.md`
   - Results: `experiments/wosac-baseline/results/baseline_v0_metrics.json`
+- `smart-baseline`
+  - Open in Colab: [smart-baseline_colab.ipynb](https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb)
+  - Notebook: `experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb`
+  - Config: `configs/experiments/smart-baseline.json`
+  - Workflow: `src/workflows/smart_baseline_flow.py`
+  - Results: `experiments/smart-baseline/results/smart_baseline_v0_metrics.json`
 
 ## Colab Run Order (Baseline)
 1. Open the baseline notebook in Colab.

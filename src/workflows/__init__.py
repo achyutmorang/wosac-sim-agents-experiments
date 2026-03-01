@@ -5,6 +5,7 @@ from .experiment_flow import (
     load_experiment_config,
 )
 from .wosac_baseline_flow import WOSACBaselineFlowBundle, run_wosac_baseline_flow
+from .smart_baseline_flow import SmartBaselineFlowBundle, run_smart_baseline_flow
 from .notebook_contract import (
     load_notebook_contract_manifest,
     manifest_has_stage,
@@ -31,6 +32,8 @@ __all__ = [
     "list_experiment_pack_table",
     "WOSACBaselineFlowBundle",
     "run_wosac_baseline_flow",
+    "SmartBaselineFlowBundle",
+    "run_smart_baseline_flow",
     "load_notebook_contract_manifest",
     "manifest_has_stage",
     "validate_notebook_contract_manifest",

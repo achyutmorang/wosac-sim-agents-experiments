@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+
+# Notebook / tooling
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+
+# Local outputs
+artifacts/
+outputs/
+checkpoints/
+logs/
+data/
+
+# OS
+.DS_Store

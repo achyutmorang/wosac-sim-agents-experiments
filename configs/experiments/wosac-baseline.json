@@ -1,0 +1,25 @@
+{
+  "slug": "wosac-baseline",
+  "title": "WOSAC Baseline",
+  "objective": "Establish first reproducible benchmark score before novelty attempts.",
+  "run": {
+    "run_tag_prefix": "wosac_baseline",
+    "persist_root": "/content/drive/MyDrive/wosac_experiments",
+    "n_rollouts_per_scenario": 32,
+    "num_history_seconds": 1,
+    "num_future_seconds": 8,
+    "notes": "Keep unchanged until first stable score is recorded."
+  },
+  "evaluation": {
+    "primary_metric": "realism_meta_metric",
+    "report_metrics": [
+      "kinematic_metrics",
+      "interactive_metrics",
+      "map_based_metrics",
+      "min_ade",
+      "simulated_collision_rate",
+      "simulated_offroad_rate",
+      "simulated_traffic_light_violation_rate"
+    ]
+  }
+}

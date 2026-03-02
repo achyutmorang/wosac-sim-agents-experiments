@@ -54,13 +54,17 @@ _PACKS: Sequence[ExperimentPack] = (
         objective="Optimize SMART-style variant under explicit safety/diversity constraints and compare with baseline.",
         notebooks=(
             "experiments/smart-constrained/notebooks/smart-constrained_colab.ipynb",
+            "experiments/smart-constrained/notebooks/smart_checkpoint_eval_colab.ipynb",
+            "experiments/smart-constrained/notebooks/smart_comparative_eval_colab.ipynb",
         ),
         workflows=(
             "src/workflows/smart_constrained_flow.py",
+            "src/workflows/smart_eval_flow.py",
         ),
         modules=(
             "src/workflows/smart_constrained_flow.py",
             "src/workflows/smart_baseline_flow.py",
+            "src/workflows/smart_eval_flow.py",
             "src/workflows/experiment_flow.py",
             "src/platform",
         ),

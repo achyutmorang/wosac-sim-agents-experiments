@@ -7,6 +7,12 @@ from .experiment_flow import (
 from .wosac_baseline_flow import WOSACBaselineFlowBundle, run_wosac_baseline_flow
 from .smart_baseline_flow import SmartBaselineFlowBundle, run_smart_baseline_flow
 from .smart_constrained_flow import SmartConstrainedBundle, run_smart_constrained_flow
+from .smart_eval_flow import (
+    SmartComparativeBundle,
+    SmartEvalBundle,
+    run_smart_comparative_flow,
+    run_smart_eval_flow,
+)
 from .notebook_contract import (
     load_notebook_contract_manifest,
     manifest_has_stage,
@@ -37,6 +43,10 @@ __all__ = [
     "run_smart_baseline_flow",
     "SmartConstrainedBundle",
     "run_smart_constrained_flow",
+    "SmartEvalBundle",
+    "run_smart_eval_flow",
+    "SmartComparativeBundle",
+    "run_smart_comparative_flow",
     "load_notebook_contract_manifest",
     "manifest_has_stage",
     "validate_notebook_contract_manifest",

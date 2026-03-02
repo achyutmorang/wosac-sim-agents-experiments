@@ -1,0 +1,12 @@
+{
+  "comparison": [],
+  "notes": [
+    "Placeholder snapshot. Run smart_comparative_eval_colab.ipynb to populate."
+  ],
+  "run_id": "smart_comparative_v0",
+  "selection": {
+    "selected_model_id": "",
+    "status": "pending_execution"
+  },
+  "status": "pending_execution"
+}

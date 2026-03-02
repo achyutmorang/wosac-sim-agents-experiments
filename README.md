@@ -40,8 +40,11 @@ This repo intentionally follows the strongest structure from `waymax-simulation-
 - `smart-constrained`
   - Open in Colab: [smart-constrained_colab.ipynb](https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-constrained/notebooks/smart-constrained_colab.ipynb)
   - Notebook: `experiments/smart-constrained/notebooks/smart-constrained_colab.ipynb`
+  - Checkpoint eval notebook: `experiments/smart-constrained/notebooks/smart_checkpoint_eval_colab.ipynb`
+  - Comparative eval notebook: `experiments/smart-constrained/notebooks/smart_comparative_eval_colab.ipynb`
   - Config: `configs/experiments/smart-constrained.json`
   - Workflow: `src/workflows/smart_constrained_flow.py`
+  - Eval workflow: `src/workflows/smart_eval_flow.py`
   - Results: `experiments/smart-constrained/results/smart_constrained_v0_metrics.json`
 
 ## Colab Run Order (Baseline)

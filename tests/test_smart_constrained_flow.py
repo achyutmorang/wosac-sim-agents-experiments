@@ -87,3 +87,33 @@ def test_smart_constrained_flow_selects_best_feasible_variant(tmp_path: Path) ->
 
     assert scored.selection["status"] == "selected_feasible"
     assert scored.selection["selected_variant_id"] == ids[0]
+
+
+def test_smart_constrained_flow_auto_resume_variant_checkpoint(tmp_path: Path) -> None:
+    persist_root = tmp_path / "persist"
+    run_prefix = "smart_constrained"
+    run_name = "dev"
+    variant_id = "t0p8_k8_cw0p1"
+    ckpt_dir = persist_root / f"{run_prefix}_{run_name}" / "checkpoints" / "variants" / variant_id
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    resume_ckpt = ckpt_dir / "epoch=09.ckpt"
+    resume_ckpt.write_bytes(b"resume-me")
+
+    bundle = run_smart_constrained_flow(
+        repo_root=tmp_path,
+        persist_root=persist_root,
+        run_prefix=run_prefix,
+        run_name=run_name,
+        run_tag="20260302T000000Z",
+        sync_smart_repo=False,
+        temperatures=[0.8],
+        top_ks=[8],
+        constraint_weights=[0.1],
+        resume_from_existing=True,
+    )
+
+    assert len(bundle.variants) == 1
+    v = bundle.variants[0]
+    assert v["resume_checkpoint_path"] == str(resume_ckpt)
+    assert "--ckpt-path" in v["train_cmd"]
+    assert str(resume_ckpt) in v["train_cmd"]

@@ -19,6 +19,7 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 ## Artifact Location
 - Persist artifacts to Google Drive under:
   - `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/`
+  - run-scoped outputs: `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/<run_tag>/`
 
 ## Reproducibility Pack
 - `experiments/smart-baseline/reproducibility.md`
@@ -32,6 +33,11 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 Set profile in notebook/script:
 - env var `SMART_BASELINE_PROFILE=paper_repro` (notebook)
 - CLI `--profile paper_repro` (script)
+
+## Resume Behavior
+- Training auto-resumes from the latest checkpoint in `SMART_BASELINE_CKPT_DIR` when `run.resume_from_existing=true` and no explicit checkpoint override is passed.
+- Optional explicit override: `SMART_RESUME_CKPT=/content/drive/.../epoch=XX.ckpt`.
+- Notebook writes `run_manifest.json` per run with resolved resume checkpoint, config hash, repo commits, and environment versions.
 
 Quick dry-run:
 ```bash

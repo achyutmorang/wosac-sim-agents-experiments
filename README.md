@@ -23,7 +23,7 @@ Active tracks:
 2. `smart-baseline`: SMART wrapper + reproducibility patch set (`smoke` and `paper_repro` profiles).
 3. `smart-constrained`: constrained variant sweep + separate simulation, strict eval, and comparative eval.
 
-Latest test status: `22 passed` (`PYTHONPATH=. pytest -q`).
+Latest test status: `24 passed` (`PYTHONPATH=. pytest -q`).
 
 ## Key Paths
 
@@ -37,8 +37,8 @@ Latest test status: `22 passed` (`PYTHONPATH=. pytest -q`).
 
 1. Run `smart-baseline` to freeze baseline checkpoint/metrics.
 2. Run `smart-constrained` training/sweep.
-3. Run rollout simulation and write per-model manifests.
-4. Run strict checkpoint evaluation with metrics-manifest binding checks.
+3. Run rollout simulation and write per-model manifests (checkpoint + rollout proto + scenario source binding).
+4. Run strict checkpoint evaluation with inline official Waymo metric computation + metrics-manifest binding checks.
 5. Run comparative evaluation and select feasible, contract-compatible best variant.
 
 ## New Experiment Scaffold

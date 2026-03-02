@@ -22,6 +22,7 @@ Train/evaluate a constrained probabilistic variant over SMART baseline and compa
 ## Artifact Location
 - Persist artifacts to Google Drive under:
   - `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/`
+  - run-scoped outputs: `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/<run_tag>/`
 
 ## Metrics Ingestion Convention
 Set environment variable before Step 3:
@@ -30,17 +31,23 @@ Set environment variable before Step 3:
 Simulation notebook uses:
 - `SMART_BASELINE_CKPT`: baseline checkpoint path
 - `SMART_VARIANT_CKPTS`: comma-separated variant checkpoint paths
+- `SMART_BASELINE_ROLLOUTS_PROTO`: baseline `ScenarioRollouts`/submission binproto path
+- `SMART_VARIANT_ROLLOUTS_PROTOS`: comma-separated rollout proto paths (aligned with variant checkpoints)
 - `WOSAC_SCENARIO_SET_ID`: scenario split identifier (e.g. `womd_validation`)
 - `WOSAC_SCENARIO_SET_HASH`: immutable scenario-set hash you use for this run
 - `WOSAC_EVALUATOR_ID`: evaluator implementation identifier
 - `WOSAC_METRICS_CONFIG_HASH`: metrics config hash/tag
 - `WOSAC_SIM_MANIFESTS_DIR`: directory where per-model simulation manifests are written
+- `WOSAC_SCENARIO_PROTO_PATH`: optional single scenario proto path
+- `WOSAC_SCENARIO_PROTO_DIR`: optional directory of `<scenario_id>.pb` files
+- `WOSAC_SCENARIO_TFRECORDS`: optional fallback TFRecord path list (comma-separated)
 
 Checkpoint eval notebook uses:
-- `WOSAC_MODEL_METRICS_DIR`: directory with `<model_id>.json` metric files
 - `WOSAC_SIM_MANIFESTS_DIR`: directory with `<model_id>_simulation_manifest.json`
+- `WOSAC_MODEL_METRICS_DIR`: optional output directory for computed `<model_id>.json` metrics (auto-created)
+- `WOSAC_SCENARIO_PROTO_PATH` / `WOSAC_SCENARIO_PROTO_DIR` / `WOSAC_SCENARIO_TFRECORDS`: scenario sources for official metric computation
 
-Each metrics JSON should include binding keys (`manifest_sha256`, `model_id`, scenario/evaluator/config hashes, rollout settings) so strict contract checks can verify provenance.
+Metrics JSON files are computed inline in notebook via official Waymo APIs and include binding keys (`manifest_sha256`, `model_id`, scenario/evaluator/config hashes, rollout settings) so strict contract checks can verify provenance.
 
 The workflow selects the best feasible variant by:
 1. safety constraints (`collision`, `offroad`, `traffic-light` bounds), then

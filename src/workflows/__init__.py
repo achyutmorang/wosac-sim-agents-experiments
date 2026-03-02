@@ -5,7 +5,7 @@ from .experiment_flow import (
     load_experiment_config,
 )
 from .wosac_baseline_flow import WOSACBaselineFlowBundle, run_wosac_baseline_flow
-from .smart_baseline_flow import SmartBaselineFlowBundle, run_smart_baseline_flow
+from .smart_baseline_flow import SmartBaselineFlowBundle, resolve_resume_checkpoint, run_smart_baseline_flow
 from .smart_constrained_flow import SmartConstrainedBundle, run_smart_constrained_flow
 from .smart_eval_flow import (
     SmartComparativeBundle,
@@ -32,6 +32,8 @@ from .model_eval_contract import (
     validate_metrics_binding,
     write_simulation_manifest,
 )
+from .run_manifest_utils import build_training_run_manifest, collect_package_versions, resolve_git_commit, write_json
+from .wosac_official_metrics import compute_official_metrics_from_rollouts
 from src.experiments import (
     ExperimentPack,
     experiment_pack_paths,
@@ -52,6 +54,7 @@ __all__ = [
     "WOSACBaselineFlowBundle",
     "run_wosac_baseline_flow",
     "SmartBaselineFlowBundle",
+    "resolve_resume_checkpoint",
     "run_smart_baseline_flow",
     "SmartConstrainedBundle",
     "run_smart_constrained_flow",
@@ -74,6 +77,11 @@ __all__ = [
     "sha256_json",
     "validate_metrics_binding",
     "write_simulation_manifest",
+    "build_training_run_manifest",
+    "collect_package_versions",
+    "resolve_git_commit",
+    "write_json",
+    "compute_official_metrics_from_rollouts",
     "ExperimentPack",
     "list_experiment_packs",
     "get_experiment_pack",

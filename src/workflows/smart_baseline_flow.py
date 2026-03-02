@@ -206,6 +206,47 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _checkpoint_candidates(save_ckpt_path: str) -> List[Path]:
+    root = Path(str(save_ckpt_path)).expanduser() if str(save_ckpt_path).strip() else None
+    if root is None or (not root.exists()) or (not root.is_dir()):
+        return []
+    paths = [p for p in root.rglob("*.ckpt") if p.is_file()]
+    # Deterministic tie-break for same mtime.
+    paths.sort(key=lambda p: ((-int(p.stat().st_mtime_ns)), str(p)))
+    return paths
+
+
+def resolve_resume_checkpoint(save_ckpt_path: str, explicit_ckpt_path: str = "") -> Dict[str, Any]:
+    explicit = str(explicit_ckpt_path).strip()
+    if explicit:
+        explicit_path = Path(explicit).expanduser()
+        return {
+            "checkpoint_path": str(explicit_path),
+            "checkpoint_exists": bool(explicit_path.exists()),
+            "source": "explicit",
+            "num_candidates": 0,
+            "candidate_sample": [],
+        }
+
+    candidates = _checkpoint_candidates(save_ckpt_path)
+    if not candidates:
+        return {
+            "checkpoint_path": "",
+            "checkpoint_exists": False,
+            "source": "none",
+            "num_candidates": 0,
+            "candidate_sample": [],
+        }
+    selected = candidates[0]
+    return {
+        "checkpoint_path": str(selected),
+        "checkpoint_exists": bool(selected.exists()),
+        "source": "auto_latest",
+        "num_candidates": len(candidates),
+        "candidate_sample": [str(p) for p in candidates[:5]],
+    }
+
+
 def _directory_manifest(path: Path, *, sample_size: int = 8, suffixes: Sequence[str] = ()) -> Dict[str, Any]:
     exists = path.exists() and path.is_dir()
     payload: Dict[str, Any] = {
@@ -267,7 +308,12 @@ def _collect_data_manifest(raw_data_root: str, processed_data_root: str) -> Dict
     }
 
 
-def _collect_checkpoint_manifest(save_ckpt_path: str, pretrain_ckpt_path: str) -> Dict[str, Any]:
+def _collect_checkpoint_manifest(
+    save_ckpt_path: str,
+    pretrain_ckpt_path: str,
+    *,
+    resolved_resume: Optional[Mapping[str, Any]] = None,
+) -> Dict[str, Any]:
     save_dir = Path(str(save_ckpt_path)).expanduser() if str(save_ckpt_path).strip() else None
     manifest: Dict[str, Any] = {
         "save_ckpt_path": str(save_dir) if save_dir is not None else "",
@@ -275,6 +321,7 @@ def _collect_checkpoint_manifest(save_ckpt_path: str, pretrain_ckpt_path: str) -
         "checkpoints": [],
         "pretrain_ckpt_path": str(pretrain_ckpt_path).strip(),
         "pretrain_ckpt_sha256": "",
+        "resume": dict(resolved_resume or {}),
     }
     if save_dir is not None and save_dir.exists():
         ckpts = sorted(save_dir.glob("*.ckpt"))
@@ -385,6 +432,8 @@ def _build_command_plan(
         train_parts.append("--no-deterministic")
     if save_ckpt_path:
         train_parts.append(f"--save-ckpt-path {_q(save_ckpt_path)}")
+    if ckpt_path:
+        train_parts.append(f"--ckpt-path {_q(ckpt_path)}")
     env_prefix = f"SMART_TRAIN_SEED={int(train_seed)} PYTHONHASHSEED={int(train_seed)}"
     if deterministic_train:
         env_prefix += " CUBLAS_WORKSPACE_CONFIG=:4096:8"
@@ -439,6 +488,12 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
     train_launcher_arg = str(kwargs.get("smart_train_launcher_path", "scripts/smart_train_repro.py")).strip()
     train_launcher_path = str(_resolve_path(repo_root, train_launcher_arg))
     sync_smart_repo = bool(kwargs.get("sync_smart_repo", False))
+    resume_from_existing = bool(kwargs.get("resume_from_existing", True))
+
+    resume_resolution = resolve_resume_checkpoint(save_ckpt_path=save_ckpt_path, explicit_ckpt_path=ckpt_path)
+    resolved_ckpt_path = ckpt_path
+    if (not resolved_ckpt_path) and resume_from_existing and str(resume_resolution.get("checkpoint_path", "")).strip():
+        resolved_ckpt_path = str(resume_resolution.get("checkpoint_path", "")).strip()
 
     metrics: Dict[str, Optional[float]] = {k: None for k in _METRIC_ALIASES}
     metrics_source = "none"
@@ -488,7 +543,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         smart_repo_dir=smart_repo_dir,
         train_config=train_config,
         val_config=val_config,
-        ckpt_path=ckpt_path,
+        ckpt_path=resolved_ckpt_path,
         save_ckpt_path=save_ckpt_path,
         raw_data_root=raw_data_root,
         processed_data_root=processed_data_root,
@@ -499,7 +554,11 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         train_launcher_path=train_launcher_path,
     )
     data_manifest = _collect_data_manifest(raw_data_root=raw_data_root, processed_data_root=processed_data_root)
-    checkpoint_manifest = _collect_checkpoint_manifest(save_ckpt_path=save_ckpt_path, pretrain_ckpt_path=ckpt_path)
+    checkpoint_manifest = _collect_checkpoint_manifest(
+        save_ckpt_path=save_ckpt_path,
+        pretrain_ckpt_path=resolved_ckpt_path,
+        resolved_resume=resume_resolution,
+    )
 
     has_primary_metric = metrics.get("realism_meta_metric") is not None
     status = "metrics_loaded" if has_primary_metric else "ready"
@@ -535,6 +594,9 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         "smart_train_launcher_path": train_launcher_path,
         "smart_train_config": train_config,
         "smart_val_config": val_config,
+        "smart_ckpt_path": resolved_ckpt_path,
+        "resume_from_existing": resume_from_existing,
+        "resume_resolution": resume_resolution,
         "sync_error": sync_error,
         "metrics_source": metrics_source,
         "metric_ingest_error": metric_ingest_error,

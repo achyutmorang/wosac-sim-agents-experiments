@@ -47,6 +47,11 @@ def _build_flow_kwargs(config: Mapping[str, Any], args: argparse.Namespace) -> D
         "run_name": args.run_name or run_cfg.get("run_name", "dev"),
         "run_prefix": args.run_prefix or run_cfg.get("run_prefix", "smart_baseline"),
         "persist_root": args.persist_root or run_cfg.get("persist_root", "/content/drive/MyDrive/wosac_experiments"),
+        "resume_from_existing": _bool_arg(
+            args.resume_from_existing,
+            args.no_resume_from_existing,
+            bool(run_cfg.get("resume_from_existing", True)),
+        ),
         "smart_repo_url": args.smart_repo_url or smart_effective.get("repo_url", "https://github.com/rainmaker22/SMART.git"),
         "smart_repo_branch": args.smart_repo_branch or smart_effective.get("branch", "main"),
         "smart_repo_commit": args.smart_repo_commit or smart_effective.get("repo_commit", ""),
@@ -119,6 +124,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-prefix", type=str, default="")
     parser.add_argument("--persist-root", type=str, default="")
     parser.add_argument("--profile", type=str, default="")
+    parser.add_argument("--resume-from-existing", action="store_true")
+    parser.add_argument("--no-resume-from-existing", action="store_true")
 
     parser.add_argument("--smart-repo-url", type=str, default="")
     parser.add_argument("--smart-repo-branch", type=str, default="")

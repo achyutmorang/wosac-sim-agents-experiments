@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-from .smart_baseline_flow import run_smart_baseline_flow
+from .smart_baseline_flow import resolve_resume_checkpoint, run_smart_baseline_flow
 
 
 _METRIC_ALIASES: Dict[str, tuple[str, ...]] = {
@@ -194,6 +194,21 @@ def _replace_or_append_flag(cmd: str, flag: str, value: str) -> str:
     return f"{text} {flag} {value}".strip()
 
 
+def _remove_flag_with_value(cmd: str, flag: str) -> str:
+    parts = str(cmd).split()
+    out: List[str] = []
+    skip_next = False
+    for token in parts:
+        if skip_next:
+            skip_next = False
+            continue
+        if token == str(flag):
+            skip_next = True
+            continue
+        out.append(token)
+    return " ".join(out)
+
+
 def _check_constraints(
     *,
     metrics: Mapping[str, Optional[float]],
@@ -282,6 +297,7 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
     run_prefix = str(kwargs.get("run_prefix", "smart_constrained"))
     persist_root = Path(str(kwargs.get("persist_root", "/content/drive/MyDrive/wosac_experiments"))).expanduser()
     smart_checkpoint_root = str(kwargs.get("smart_checkpoint_root", "")).strip()
+    resume_from_existing = bool(kwargs.get("resume_from_existing", True))
 
     baseline_kwargs = dict(kwargs)
     baseline_kwargs.setdefault("sync_smart_repo", False)
@@ -329,11 +345,21 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
                     "SMART_CONSTRAINT_WEIGHT": weight,
                 }
                 train_cmd = _inject_env(baseline_bundle.command_plan["train_cmd"], env=env_map, needle="python train.py")
+                train_cmd = _remove_flag_with_value(train_cmd, "--save_ckpt_path")
                 train_cmd = _replace_or_append_flag(
                     train_cmd,
                     flag="--save_ckpt_path",
                     value=str(variant_ckpt_dir),
                 )
+                train_cmd = _remove_flag_with_value(train_cmd, "--ckpt-path")
+                resume_resolution = resolve_resume_checkpoint(str(variant_ckpt_dir))
+                resume_path = str(resume_resolution.get("checkpoint_path", "")).strip()
+                if resume_from_existing and resume_path:
+                    train_cmd = _replace_or_append_flag(
+                        train_cmd,
+                        flag="--ckpt-path",
+                        value=resume_path,
+                    )
                 validate_cmd = _inject_env(
                     baseline_bundle.command_plan["validate_cmd"],
                     env=env_map,
@@ -350,6 +376,8 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
                     "train_cmd": train_cmd,
                     "validate_cmd": validate_cmd,
                     "checkpoint_dir": str(variant_ckpt_dir),
+                    "resume_checkpoint_path": resume_path if resume_from_existing else "",
+                    "resume_source": str(resume_resolution.get("source", "")),
                     "metrics": {k: None for k in _METRIC_ALIASES},
                     "constraint_check": {"feasible": False, "violations": ["metrics_missing"]},
                 }
@@ -397,6 +425,7 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
         "baseline_metrics_source": baseline_metrics_source,
         "baseline_metrics_json": str(baseline_metrics_path) if baseline_metrics_path is not None else "",
         "variant_metrics_dir": str(variant_metrics_dir) if variant_metrics_dir is not None else "",
+        "resume_from_existing": resume_from_existing,
         "num_variants": len(variants),
         "selection_status": selection["status"],
     }

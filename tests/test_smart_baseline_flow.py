@@ -95,3 +95,30 @@ def test_smart_baseline_flow_records_checkpoint_hashes(tmp_path: Path) -> None:
     assert len(ckpts) == 1
     assert ckpts[0]["path"] == str(ckpt_path)
     assert ckpts[0]["sha256"]
+
+
+def test_smart_baseline_flow_auto_resume_uses_latest_checkpoint(tmp_path: Path) -> None:
+    ckpt_dir = tmp_path / "ckpts"
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    ckpt_old = ckpt_dir / "epoch=01.ckpt"
+    ckpt_new = ckpt_dir / "epoch=02.ckpt"
+    ckpt_old.write_bytes(b"older")
+    ckpt_new.write_bytes(b"newer")
+    ckpt_new.touch()
+
+    bundle = run_smart_baseline_flow(
+        repo_root=tmp_path,
+        persist_root=tmp_path / "persist",
+        run_prefix="smart_baseline",
+        run_name="dev",
+        run_tag="20260302T000000Z",
+        sync_smart_repo=False,
+        smart_save_ckpt_path=str(ckpt_dir),
+        smart_ckpt_path="",
+        resume_from_existing=True,
+    )
+
+    assert "--ckpt-path" in bundle.command_plan["train_cmd"]
+    assert str(ckpt_new) in bundle.command_plan["train_cmd"]
+    assert bundle.summary["smart_ckpt_path"] == str(ckpt_new)
+    assert bundle.summary["resume_resolution"]["source"] == "auto_latest"

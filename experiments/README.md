@@ -20,5 +20,5 @@ python3 scripts/new_experiment.py \
 ```
 
 Notebook standards:
-- `notebooks/NOTEBOOK_DESIGN_CONTRACT.md`
-- `notebooks/templates/paper_experiment_colab_template.ipynb`
+- Keep experiment notebooks reproducible, stage-oriented, and restart-safe.
+- Keep experiment logic in `src/workflows/`, not only in notebook cells.

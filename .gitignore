@@ -9,6 +9,8 @@ venv/
 .ipynb_checkpoints/
 .pytest_cache/
 .mypy_cache/
+notebooks/NOTEBOOK_DESIGN_CONTRACT.md
+notebooks/templates/
 
 # Local outputs
 artifacts/

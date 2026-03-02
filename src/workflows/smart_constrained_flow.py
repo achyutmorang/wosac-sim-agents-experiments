@@ -179,6 +179,21 @@ def _inject_env(cmd: str, env: Mapping[str, Any], needle: str) -> str:
     return f"{env_prefix} {cmd}"
 
 
+def _replace_or_append_flag(cmd: str, flag: str, value: str) -> str:
+    text = str(cmd)
+    if not value:
+        return text
+    parts = text.split()
+    if flag in parts:
+        idx = parts.index(flag)
+        if idx + 1 < len(parts):
+            parts[idx + 1] = value
+        else:
+            parts.append(value)
+        return " ".join(parts)
+    return f"{text} {flag} {value}".strip()
+
+
 def _check_constraints(
     *,
     metrics: Mapping[str, Optional[float]],
@@ -266,6 +281,7 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
     run_name = str(kwargs.get("run_name", "dev"))
     run_prefix = str(kwargs.get("run_prefix", "smart_constrained"))
     persist_root = Path(str(kwargs.get("persist_root", "/content/drive/MyDrive/wosac_experiments"))).expanduser()
+    smart_checkpoint_root = str(kwargs.get("smart_checkpoint_root", "")).strip()
 
     baseline_kwargs = dict(kwargs)
     baseline_kwargs.setdefault("sync_smart_repo", False)
@@ -307,12 +323,19 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
         for top_k in top_ks:
             for weight in constraint_weights:
                 variant_id = _format_variant_id(temperature=temp, top_k=top_k, constraint_weight=weight)
+                default_variant_ckpt_dir = persist_root / f"{run_prefix}_{run_name}" / "checkpoints" / "variants" / variant_id
+                variant_ckpt_dir = _resolve_path(repo_root, smart_checkpoint_root) / variant_id if smart_checkpoint_root else default_variant_ckpt_dir
                 env_map = {
                     "SMART_TEMP": temp,
                     "SMART_TOP_K": int(top_k),
                     "SMART_CONSTRAINT_WEIGHT": weight,
                 }
                 train_cmd = _inject_env(baseline_bundle.command_plan["train_cmd"], env=env_map, needle="python train.py")
+                train_cmd = _replace_or_append_flag(
+                    train_cmd,
+                    flag="--save_ckpt_path",
+                    value=str(variant_ckpt_dir),
+                )
                 validate_cmd = _inject_env(
                     baseline_bundle.command_plan["validate_cmd"],
                     env=env_map,
@@ -328,6 +351,7 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
                     "preprocess_val_cmd": baseline_bundle.command_plan["preprocess_val_cmd"],
                     "train_cmd": train_cmd,
                     "validate_cmd": validate_cmd,
+                    "checkpoint_dir": str(variant_ckpt_dir),
                     "metrics": {k: None for k in _METRIC_ALIASES},
                     "constraint_check": {"feasible": False, "violations": ["metrics_missing"]},
                 }

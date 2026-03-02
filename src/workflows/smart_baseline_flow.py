@@ -170,6 +170,7 @@ def _build_command_plan(
     train_config: str,
     val_config: str,
     ckpt_path: str,
+    save_ckpt_path: str,
     raw_data_root: str,
     processed_data_root: str,
     install_pyg: bool,
@@ -196,7 +197,12 @@ def _build_command_plan(
     train_cmd = " && ".join(
         [
             f"cd {smart_repo_dir}",
-            f"python train.py --config {train_config}",
+            " ".join(
+                [
+                    f"python train.py --config {train_config}",
+                    f"--save_ckpt_path {save_ckpt_path}" if save_ckpt_path else "",
+                ]
+            ).strip(),
         ]
     )
     val_parts = [
@@ -228,6 +234,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
     train_config = str(kwargs.get("smart_train_config", "configs/train/train_scalable.yaml"))
     val_config = str(kwargs.get("smart_val_config", "configs/validation/validation_scalable.yaml"))
     ckpt_path = str(kwargs.get("smart_ckpt_path", "")).strip()
+    save_ckpt_path = str(kwargs.get("smart_save_ckpt_path", "")).strip()
     raw_data_root = str(kwargs.get("smart_raw_data_root", "/content/SMART/data/waymo/scenario"))
     processed_data_root = str(kwargs.get("smart_processed_data_root", "/content/SMART/data/waymo_processed"))
     install_pyg = bool(kwargs.get("smart_install_pyg", False))
@@ -275,6 +282,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         train_config=train_config,
         val_config=val_config,
         ckpt_path=ckpt_path,
+        save_ckpt_path=save_ckpt_path,
         raw_data_root=raw_data_root,
         processed_data_root=processed_data_root,
         install_pyg=install_pyg,

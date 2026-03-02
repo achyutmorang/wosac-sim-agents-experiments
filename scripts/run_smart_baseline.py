@@ -35,6 +35,11 @@ def _bool_arg(explicit_true: bool, explicit_false: bool, default: bool) -> bool:
 def _build_flow_kwargs(config: Mapping[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
     run_cfg = dict(config.get("run", {}))
     smart_cfg = dict(config.get("smart", {}))
+    profiles = dict(smart_cfg.get("profiles", {}))
+    profile = str(args.profile or smart_cfg.get("profile", "")).strip()
+    profile_cfg = dict(profiles.get(profile, {})) if profile else {}
+    smart_effective = dict(smart_cfg)
+    smart_effective.update(profile_cfg)
 
     kwargs: Dict[str, Any] = {
         "repo_root": str(args.repo_root),
@@ -42,16 +47,34 @@ def _build_flow_kwargs(config: Mapping[str, Any], args: argparse.Namespace) -> D
         "run_name": args.run_name or run_cfg.get("run_name", "dev"),
         "run_prefix": args.run_prefix or run_cfg.get("run_prefix", "smart_baseline"),
         "persist_root": args.persist_root or run_cfg.get("persist_root", "/content/drive/MyDrive/wosac_experiments"),
-        "smart_repo_url": args.smart_repo_url or smart_cfg.get("repo_url", "https://github.com/rainmaker22/SMART.git"),
-        "smart_repo_branch": args.smart_repo_branch or smart_cfg.get("branch", "main"),
-        "smart_repo_dir": args.smart_repo_dir or smart_cfg.get("repo_dir", "/content/SMART"),
-        "smart_train_config": args.train_config or smart_cfg.get("train_config", "configs/train/train_scalable.yaml"),
-        "smart_val_config": args.val_config or smart_cfg.get("val_config", "configs/validation/validation_scalable.yaml"),
-        "smart_ckpt_path": args.ckpt_path if args.ckpt_path is not None else smart_cfg.get("ckpt_path", ""),
-        "smart_raw_data_root": args.raw_data_root or smart_cfg.get("raw_data_root", "/content/SMART/data/waymo/scenario"),
+        "smart_repo_url": args.smart_repo_url or smart_effective.get("repo_url", "https://github.com/rainmaker22/SMART.git"),
+        "smart_repo_branch": args.smart_repo_branch or smart_effective.get("branch", "main"),
+        "smart_repo_commit": args.smart_repo_commit or smart_effective.get("repo_commit", ""),
+        "smart_repo_dir": args.smart_repo_dir or smart_effective.get("repo_dir", "/content/SMART"),
+        "smart_train_config": args.train_config or smart_effective.get("train_config", "configs/train/train_scalable.yaml"),
+        "smart_val_config": args.val_config or smart_effective.get("val_config", "configs/validation/validation_scalable.yaml"),
+        "smart_ckpt_path": args.ckpt_path if args.ckpt_path is not None else smart_effective.get("ckpt_path", ""),
+        "smart_save_ckpt_path": args.save_ckpt_path if args.save_ckpt_path is not None else smart_effective.get("save_ckpt_path", ""),
+        "smart_raw_data_root": args.raw_data_root or smart_effective.get("raw_data_root", "/content/SMART/data/waymo/scenario"),
         "smart_processed_data_root": args.processed_data_root
-        or smart_cfg.get("processed_data_root", "/content/SMART/data/waymo_processed"),
-        "smart_install_pyg": _bool_arg(args.install_pyg, args.no_install_pyg, bool(smart_cfg.get("install_pyg", True))),
+        or smart_effective.get("processed_data_root", "/content/SMART/data/waymo_processed"),
+        "smart_install_pyg": _bool_arg(
+            args.install_pyg,
+            args.no_install_pyg,
+            bool(smart_effective.get("install_pyg", True)),
+        ),
+        "smart_env_lockfile": args.env_lockfile or smart_effective.get("env_lockfile", ""),
+        "smart_train_seed": args.seed if args.seed is not None else smart_effective.get("seed", 2),
+        "smart_deterministic_train": _bool_arg(
+            args.deterministic_train,
+            args.no_deterministic_train,
+            bool(smart_effective.get("deterministic_train", True)),
+        ),
+        "smart_train_launcher_path": args.train_launcher_path or smart_effective.get(
+            "train_launcher_path",
+            "scripts/smart_train_repro.py",
+        ),
+        "smart_profile": profile or "default",
         "sync_smart_repo": _bool_arg(args.sync_smart_repo, args.no_sync_smart_repo, True),
         "official_metrics_json": args.official_metrics_json or "",
         "metrics_csv": args.metrics_csv or "",
@@ -95,20 +118,27 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-name", type=str, default="")
     parser.add_argument("--run-prefix", type=str, default="")
     parser.add_argument("--persist-root", type=str, default="")
+    parser.add_argument("--profile", type=str, default="")
 
     parser.add_argument("--smart-repo-url", type=str, default="")
     parser.add_argument("--smart-repo-branch", type=str, default="")
+    parser.add_argument("--smart-repo-commit", type=str, default="")
     parser.add_argument("--smart-repo-dir", type=str, default="")
     parser.add_argument("--train-config", type=str, default="")
     parser.add_argument("--val-config", type=str, default="")
     parser.add_argument("--ckpt-path", type=str, default=None)
+    parser.add_argument("--save-ckpt-path", type=str, default=None)
     parser.add_argument("--raw-data-root", type=str, default="")
     parser.add_argument("--processed-data-root", type=str, default="")
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--train-launcher-path", type=str, default="")
 
     parser.add_argument("--sync-smart-repo", action="store_true")
     parser.add_argument("--no-sync-smart-repo", action="store_true")
     parser.add_argument("--install-pyg", action="store_true")
     parser.add_argument("--no-install-pyg", action="store_true")
+    parser.add_argument("--deterministic-train", action="store_true")
+    parser.add_argument("--no-deterministic-train", action="store_true")
 
     parser.add_argument("--official-metrics-json", type=str, default="")
     parser.add_argument("--metrics-csv", type=str, default="")
@@ -137,16 +167,6 @@ def main() -> int:
     print(json.dumps(bundle.summary, indent=2, sort_keys=True))
     print("[flow] command_plan")
     print(json.dumps(bundle.command_plan, indent=2, sort_keys=True))
-
-    lockfile_arg = args.env_lockfile.strip()
-    if lockfile_arg:
-        lockfile = Path(lockfile_arg).expanduser().resolve()
-        if not lockfile.exists():
-            raise FileNotFoundError(f"Missing env lockfile: {lockfile}")
-        env_cmd = f"python -m pip install -r {lockfile}"
-        print(f"[env] {env_cmd}")
-        if not args.print_only:
-            _run_shell(env_cmd)
 
     stages = _stage_commands(plan=bundle.command_plan, args=args)
     if not stages:

@@ -13,6 +13,8 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 
 ## Config
 - `configs/experiments/smart-baseline.json`
+- `experiments/smart-baseline/configs/train_scalable_paper_repro.yaml`
+- `experiments/smart-baseline/configs/validation_scalable_paper_repro.yaml`
 
 ## Results Artifacts
 - `experiments/smart-baseline/results/README.md`
@@ -21,11 +23,21 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 ## Reproducibility Pack
 - `experiments/smart-baseline/reproducibility.md`
 - strict env lock: `experiments/smart-baseline/env/requirements-smart-exact-cu113.txt`
+- deterministic launcher: `scripts/smart_train_repro.py`
+
+## Profiles
+- `smoke`: quick sanity mode using SMART demo config (`data/valid_demo`).
+- `paper_repro`: pinned SMART commit + fixed seed + full WOMD processed split config.
+
+Set profile in notebook/script:
+- env var `SMART_BASELINE_PROFILE=paper_repro` (notebook)
+- CLI `--profile paper_repro` (script)
 
 Quick dry-run:
 ```bash
 python3 scripts/run_smart_baseline.py \
   --config configs/experiments/smart-baseline.json \
+  --profile paper_repro \
   --no-sync-smart-repo \
   --print-only
 ```

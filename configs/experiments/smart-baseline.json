@@ -34,13 +34,33 @@
   "smart": {
     "branch": "main",
     "ckpt_path": "",
+    "deterministic_train": true,
+    "env_lockfile": "experiments/smart-baseline/env/requirements-smart-exact-cu113.txt",
     "install_pyg": true,
+    "profile": "paper_repro",
     "processed_data_root": "/content/SMART/data/waymo_processed",
     "raw_data_root": "/content/SMART/data/waymo/scenario",
+    "repo_commit": "42e658542b03dd14e1c36c63e214994e4b8c7b36",
     "repo_dir": "/content/SMART",
     "repo_url": "https://github.com/rainmaker22/SMART.git",
+    "seed": 2,
     "train_config": "configs/train/train_scalable.yaml",
-    "val_config": "configs/validation/validation_scalable.yaml"
+    "train_launcher_path": "scripts/smart_train_repro.py",
+    "val_config": "configs/validation/validation_scalable.yaml",
+    "profiles": {
+      "smoke": {
+        "deterministic_train": true,
+        "install_pyg": true,
+        "train_config": "configs/train/train_scalable.yaml",
+        "val_config": "configs/validation/validation_scalable.yaml"
+      },
+      "paper_repro": {
+        "deterministic_train": true,
+        "install_pyg": true,
+        "train_config": "experiments/smart-baseline/configs/train_scalable_paper_repro.yaml",
+        "val_config": "experiments/smart-baseline/configs/validation_scalable_paper_repro.yaml"
+      }
+    }
   },
   "title": "SMART Baseline Wrapper"
 }

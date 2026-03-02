@@ -21,20 +21,29 @@ correctness depends on manual command execution.
 `scripts/run_smart_baseline.py` supports dry-run planning, stage selection, and execution.
 3. Strict dependency lock for exact upstream profile:
 `experiments/smart-baseline/env/requirements-smart-exact-cu113.txt`.
-4. Smoke tests for command behavior:
+4. Deterministic training launcher around upstream `train.py`:
+`scripts/smart_train_repro.py` sets fixed seed and deterministic flags, then calls SMART `train.py` unchanged.
+5. Pinned upstream commit support:
+`smart.repo_commit` in `configs/experiments/smart-baseline.json` locks SMART checkout revision.
+6. Profiled configs:
+`smart.profiles.smoke` (demo) and `smart.profiles.paper_repro` (full WOMD-processed paths + non-smoke budget).
+7. Run manifests:
+baseline flow writes data split manifests and checkpoint SHA256 manifests into run outputs.
+8. Smoke tests for command behavior:
 `tests/test_smart_baseline_flow.py` and `tests/test_run_smart_baseline_script.py`.
 
 ## Recommended Execution Modes
 1. Inspect mode (Colab-first):
 use notebook + dry-run command plan and optional stage execution.
-2. Exact reproduction mode (Linux/CUDA11.3):
-use the strict lockfile with `--env-lockfile` in `scripts/run_smart_baseline.py`.
+2. Paper-repro baseline mode (Linux/CUDA11.3):
+use `--profile paper_repro` so run uses pinned SMART commit, strict lockfile, deterministic seed, and paper-repro configs.
 
 ## One-Command Examples
 Dry-run only (safe):
 ```bash
 python3 scripts/run_smart_baseline.py \
   --config configs/experiments/smart-baseline.json \
+  --profile paper_repro \
   --no-sync-smart-repo \
   --print-only
 ```
@@ -43,6 +52,7 @@ Train + validate (when environment and data are ready):
 ```bash
 python3 scripts/run_smart_baseline.py \
   --config configs/experiments/smart-baseline.json \
+  --profile paper_repro \
   --sync-smart-repo \
   --setup --preprocess --train --validate
 ```

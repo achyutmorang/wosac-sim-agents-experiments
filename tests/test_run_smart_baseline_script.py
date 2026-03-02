@@ -54,3 +54,60 @@ def test_run_smart_baseline_script_dry_run(tmp_path: Path) -> None:
     assert "eval.py" not in proc.stdout
     plan_path = tmp_path / "persist" / "smart_baseline_smoke" / "outputs" / "smart_command_plan.json"
     assert plan_path.exists()
+
+
+def test_run_smart_baseline_script_profile_override(tmp_path: Path) -> None:
+    config_payload = {
+        "slug": "smart-baseline",
+        "title": "SMART Baseline Wrapper",
+        "objective": "Profile override check.",
+        "run": {
+            "run_name": "profile",
+            "run_prefix": "smart_baseline",
+            "persist_root": str(tmp_path / "persist"),
+        },
+        "smart": {
+            "repo_url": "https://github.com/rainmaker22/SMART.git",
+            "branch": "main",
+            "repo_dir": str(tmp_path / "SMART"),
+            "train_config": "configs/train/train_scalable.yaml",
+            "val_config": "configs/validation/validation_scalable.yaml",
+            "raw_data_root": str(tmp_path / "raw"),
+            "processed_data_root": str(tmp_path / "processed"),
+            "install_pyg": False,
+            "profiles": {
+                "paper_repro": {
+                    "train_config": "experiments/smart-baseline/configs/train_scalable_paper_repro.yaml",
+                    "val_config": "experiments/smart-baseline/configs/validation_scalable_paper_repro.yaml",
+                    "seed": 7,
+                    "deterministic_train": True,
+                }
+            },
+        },
+    }
+    config_path = tmp_path / "smart-baseline.json"
+    config_path.write_text(json.dumps(config_payload), encoding="utf-8")
+
+    repo_root = Path(__file__).resolve().parents[1]
+    script_path = repo_root / "scripts" / "run_smart_baseline.py"
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(script_path),
+            "--config",
+            str(config_path),
+            "--repo-root",
+            str(repo_root),
+            "--profile",
+            "paper_repro",
+            "--no-sync-smart-repo",
+            "--print-only",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert "train_scalable_paper_repro.yaml" in proc.stdout
+    assert "--seed 7" in proc.stdout

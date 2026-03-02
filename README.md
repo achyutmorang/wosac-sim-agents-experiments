@@ -20,10 +20,10 @@ Establish a stable SMART baseline, then develop constrained probabilistic varian
 Active tracks:
 
 1. `wosac-baseline`: benchmark contract, survey, reference artifacts.
-2. `smart-baseline`: SMART wrapper + reproducibility patch set.
+2. `smart-baseline`: SMART wrapper + reproducibility patch set (`smoke` and `paper_repro` profiles).
 3. `smart-constrained`: constrained variant sweep + separate simulation, strict eval, and comparative eval.
 
-Latest test status: `20 passed` (`PYTHONPATH=. pytest -q`).
+Latest test status: `22 passed` (`PYTHONPATH=. pytest -q`).
 
 ## Key Paths
 

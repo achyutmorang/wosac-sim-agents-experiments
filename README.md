@@ -21,9 +21,9 @@ Active tracks:
 
 1. `wosac-baseline`: benchmark contract, survey, reference artifacts.
 2. `smart-baseline`: SMART wrapper + reproducibility patch set.
-3. `smart-constrained`: constrained variant sweep + separate checkpoint eval + comparative eval.
+3. `smart-constrained`: constrained variant sweep + separate simulation, strict eval, and comparative eval.
 
-Latest test status: `17 passed` (`PYTHONPATH=. pytest -q`).
+Latest test status: `20 passed` (`PYTHONPATH=. pytest -q`).
 
 ## Key Paths
 
@@ -37,8 +37,9 @@ Latest test status: `17 passed` (`PYTHONPATH=. pytest -q`).
 
 1. Run `smart-baseline` to freeze baseline checkpoint/metrics.
 2. Run `smart-constrained` training/sweep.
-3. Run checkpoint evaluation.
-4. Run comparative evaluation and select feasible best variant.
+3. Run rollout simulation and write per-model manifests.
+4. Run strict checkpoint evaluation with metrics-manifest binding checks.
+5. Run comparative evaluation and select feasible, contract-compatible best variant.
 
 ## New Experiment Scaffold
 

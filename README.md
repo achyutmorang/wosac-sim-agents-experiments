@@ -37,6 +37,12 @@ This repo intentionally follows the strongest structure from `waymax-simulation-
   - One-command runner: `scripts/run_smart_baseline.py`
   - Repro notes: `experiments/smart-baseline/reproducibility.md`
   - Results: `experiments/smart-baseline/results/smart_baseline_v0_metrics.json`
+- `smart-constrained`
+  - Open in Colab: [smart-constrained_colab.ipynb](https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-constrained/notebooks/smart-constrained_colab.ipynb)
+  - Notebook: `experiments/smart-constrained/notebooks/smart-constrained_colab.ipynb`
+  - Config: `configs/experiments/smart-constrained.json`
+  - Workflow: `src/workflows/smart_constrained_flow.py`
+  - Results: `experiments/smart-constrained/results/smart_constrained_v0_metrics.json`
 
 ## Colab Run Order (Baseline)
 1. Open the baseline notebook in Colab.

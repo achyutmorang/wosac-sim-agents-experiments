@@ -7,6 +7,7 @@ def test_pack_registry_has_wosac_baseline() -> None:
     slugs = {pack.slug for pack in list_experiment_packs()}
     assert "wosac-baseline" in slugs
     assert "smart-baseline" in slugs
+    assert "smart-constrained" in slugs
 
 
 def test_registry_paths_resolve_for_repo_root() -> None:
@@ -15,3 +16,5 @@ def test_registry_paths_resolve_for_repo_root() -> None:
     assert status["wosac-baseline"]["missing"] == []
     assert "smart-baseline" in status
     assert status["smart-baseline"]["missing"] == []
+    assert "smart-constrained" in status
+    assert status["smart-constrained"]["missing"] == []

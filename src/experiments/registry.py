@@ -48,6 +48,27 @@ _PACKS: Sequence[ExperimentPack] = (
         ),
         tags=("wosac", "sim-agents", "smart", "baseline", "colab", "external-wrapper"),
     ),
+    ExperimentPack(
+        slug="smart-constrained",
+        title="SMART Constrained Probabilistic Variant",
+        objective="Optimize SMART-style variant under explicit safety/diversity constraints and compare with baseline.",
+        notebooks=(
+            "experiments/smart-constrained/notebooks/smart-constrained_colab.ipynb",
+        ),
+        workflows=(
+            "src/workflows/smart_constrained_flow.py",
+        ),
+        modules=(
+            "src/workflows/smart_constrained_flow.py",
+            "src/workflows/smart_baseline_flow.py",
+            "src/workflows/experiment_flow.py",
+            "src/platform",
+        ),
+        config_paths=(
+            "configs/experiments/smart-constrained.json",
+        ),
+        tags=("wosac", "sim-agents", "smart", "constrained", "probabilistic", "colab"),
+    ),
 )
 
 

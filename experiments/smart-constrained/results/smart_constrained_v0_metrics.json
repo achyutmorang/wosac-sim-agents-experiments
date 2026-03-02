@@ -1,0 +1,23 @@
+{
+  "baseline": {
+    "primary_metric_reference": "realism_meta_metric",
+    "run_id": "smart_baseline_v0"
+  },
+  "constraints": {
+    "max_collision_rate": null,
+    "max_offroad_rate": null,
+    "max_tl_violation_rate": null,
+    "min_diversity_score": null
+  },
+  "metrics": {
+    "realism_meta_metric": null,
+    "simulated_collision_rate": null,
+    "simulated_offroad_rate": null,
+    "simulated_traffic_light_violation_rate": null
+  },
+  "notes": [
+    "Placeholder snapshot. Run smart-constrained notebook to populate."
+  ],
+  "run_id": "smart_constrained_v0",
+  "status": "pending_execution"
+}

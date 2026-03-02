@@ -9,6 +9,11 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 - `experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb`
 - `experiments/wosac-baseline/notebooks/wosac_baseline_colab.ipynb`
 
+`wosac_baseline_colab.ipynb` now follows the official Sim Agents tutorial stages:
+- `ScenarioRollouts` generation + protobuf validation via `submission_specs`.
+- official metrics call via `metrics.compute_scenario_metrics_for_bundle`.
+- optional `SimAgentsChallengeSubmission` shard/tar packaging.
+
 ## Workflow Entrypoint
 - `src/workflows/wosac_baseline_flow.py`
 
@@ -26,6 +31,7 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 ## Results Artifacts
 - `experiments/wosac-baseline/results/README.md`
 - `experiments/wosac-baseline/results/baseline_v0_metrics.json`
+- `experiments/wosac-baseline/results/wosac_official_compliance_v0.json`
 
 ## Optional Evaluator Ingestion
 Set one of these environment variables before running Step 5 in the smoke notebook:

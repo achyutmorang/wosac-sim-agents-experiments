@@ -4,6 +4,7 @@ This folder stores versioned baseline metric artifacts used for reproducibility 
 
 ## Files
 - `baseline_v0_metrics.json`: canonical baseline metrics snapshot.
+- `wosac_official_compliance_v0.json`: official tutorial-aligned compliance run snapshot.
 
 ## Update Rule
 Only overwrite `baseline_v0_metrics.json` from the notebook:

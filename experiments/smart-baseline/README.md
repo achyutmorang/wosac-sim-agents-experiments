@@ -16,9 +16,9 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 - `experiments/smart-baseline/configs/train_scalable_paper_repro.yaml`
 - `experiments/smart-baseline/configs/validation_scalable_paper_repro.yaml`
 
-## Results Artifacts
-- `experiments/smart-baseline/results/README.md`
-- `experiments/smart-baseline/results/smart_baseline_v0_metrics.json`
+## Artifact Location
+- Persist artifacts to Google Drive under:
+  - `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/`
 
 ## Reproducibility Pack
 - `experiments/smart-baseline/reproducibility.md`

@@ -19,6 +19,7 @@ checkpoints/
 logs/
 data/
 _external_refs/
+experiments/**/results/
 
 # OS
 .DS_Store

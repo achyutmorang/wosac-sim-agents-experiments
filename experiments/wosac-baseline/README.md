@@ -28,10 +28,9 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 ## Experiment Contract
 - `experiments/wosac-baseline/experiment_contract.md`
 
-## Results Artifacts
-- `experiments/wosac-baseline/results/README.md`
-- `experiments/wosac-baseline/results/baseline_v0_metrics.json`
-- `experiments/wosac-baseline/results/wosac_official_compliance_v0.json`
+## Artifact Location
+- Persist artifacts to Google Drive under:
+  - `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/`
 
 ## Optional Evaluator Ingestion
 Set one of these environment variables before running Step 5 in the smoke notebook:

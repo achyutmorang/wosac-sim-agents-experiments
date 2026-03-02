@@ -302,13 +302,11 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
         "min_diversity_score": min_diversity,
     }
 
-    baseline_metrics_path_arg = str(
-        kwargs.get("baseline_metrics_json", "experiments/smart-baseline/results/smart_baseline_v0_metrics.json")
-    ).strip()
-    baseline_metrics_path = _resolve_path(repo_root, baseline_metrics_path_arg)
+    baseline_metrics_path_arg = str(kwargs.get("baseline_metrics_json", "")).strip()
+    baseline_metrics_path = _resolve_path(repo_root, baseline_metrics_path_arg) if baseline_metrics_path_arg else None
     baseline_metrics = {k: None for k in _METRIC_ALIASES}
     baseline_metrics_source = "none"
-    if baseline_metrics_path.exists():
+    if baseline_metrics_path is not None and baseline_metrics_path.exists():
         try:
             baseline_metrics = _extract_metrics_from_json(baseline_metrics_path)
             baseline_metrics_source = "json"
@@ -397,7 +395,7 @@ def run_smart_constrained_flow(**kwargs: Any) -> SmartConstrainedBundle:
         "created_utc": _utc_now_iso(),
         "config_hash": _config_hash({k: v for k, v in kwargs.items() if isinstance(k, str)}),
         "baseline_metrics_source": baseline_metrics_source,
-        "baseline_metrics_json": str(baseline_metrics_path),
+        "baseline_metrics_json": str(baseline_metrics_path) if baseline_metrics_path is not None else "",
         "variant_metrics_dir": str(variant_metrics_dir) if variant_metrics_dir is not None else "",
         "num_variants": len(variants),
         "selection_status": selection["status"],

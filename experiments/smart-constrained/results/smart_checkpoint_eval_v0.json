@@ -1,8 +1,0 @@
-{
-  "models": [],
-  "notes": [
-    "Placeholder snapshot. Run smart_checkpoint_eval_colab.ipynb to populate."
-  ],
-  "run_id": "smart_checkpoint_eval_v0",
-  "status": "pending_execution"
-}

@@ -19,12 +19,9 @@ Train/evaluate a constrained probabilistic variant over SMART baseline and compa
 ## Config
 - `configs/experiments/smart-constrained.json`
 
-## Results Artifacts
-- `experiments/smart-constrained/results/README.md`
-- `experiments/smart-constrained/results/smart_constrained_v0_metrics.json`
-- `experiments/smart-constrained/results/smart_rollout_simulation_v0.json`
-- `experiments/smart-constrained/results/smart_checkpoint_eval_v0.json`
-- `experiments/smart-constrained/results/smart_comparative_v0_report.json`
+## Artifact Location
+- Persist artifacts to Google Drive under:
+  - `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/`
 
 ## Metrics Ingestion Convention
 Set environment variable before Step 3:

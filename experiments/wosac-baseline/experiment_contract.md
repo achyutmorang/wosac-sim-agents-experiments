@@ -22,7 +22,7 @@ If we keep a deterministic Colab-first setup and evaluate with the official WOSA
 - Notebook entrypoint: `experiments/wosac-baseline/notebooks/01_colab_smoke_test.ipynb`
 - Config file: `configs/experiments/wosac-baseline.json`
 - Workflow entrypoint: `src/workflows/wosac_baseline_flow.py`
-- Output artifact: `experiments/wosac-baseline/results/baseline_v0_metrics.json`
+- Output artifact root: `/content/drive/MyDrive/wosac_experiments/<run_prefix>_<run_name>/outputs/`
 
 ## 6. Compute Budget
 - Runtime: Google Colab (CPU or T4 GPU)

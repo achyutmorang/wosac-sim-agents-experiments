@@ -1,6 +1,6 @@
 {
   "baseline": {
-    "baseline_metrics_json": "experiments/smart-baseline/results/smart_baseline_v0_metrics.json"
+    "baseline_metrics_json": ""
   },
   "constraints": {
     "max_collision_rate": 0.06,

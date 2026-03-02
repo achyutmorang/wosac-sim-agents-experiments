@@ -17,6 +17,7 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 
 ## Literature and References
 - `experiments/wosac-baseline/lit_survey.md`
+- `experiments/wosac-baseline/smart_centered_implementation_comparison.md`
 - `experiments/wosac-baseline/references/README.md`
 
 ## Experiment Contract

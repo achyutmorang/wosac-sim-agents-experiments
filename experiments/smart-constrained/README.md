@@ -66,7 +66,7 @@ The workflow selects the best feasible variant by:
 - Constrained training notebook stages raw WOMD shards from Waymo GCS to local Colab paths used by SMART.
 - Key env vars:
   - `SMART_DATA_SOURCE=gcs_stage` (default)
-  - `SMART_GCS_DATASET_ROOT=gs://waymo_open_dataset_motion_v_1_2_0/scenario`
+  - `SMART_GCS_DATASET_ROOT=gs://waymo_open_dataset_motion_v_1_3_1/uncompressed/scenario`
   - `SMART_GCS_TRAIN_SPLIT=training`, `SMART_GCS_VAL_SPLIT=validation`
   - `SMART_GCS_TRAIN_SHARDS`, `SMART_GCS_VAL_SHARDS`
   - `SMART_RUN_DATA_STAGE=1` (default), `SMART_FORCE_DATA_REDOWNLOAD=0` (default)

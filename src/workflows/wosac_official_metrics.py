@@ -41,6 +41,39 @@ def _parse_csv_like_paths(value: Any) -> List[str]:
     return []
 
 
+def _is_gcs_uri(value: str) -> bool:
+    return str(value).strip().startswith("gs://")
+
+
+def _expand_tfrecord_inputs(paths_value: Any, *, tf: Any) -> List[str]:
+    resolved: List[str] = []
+    for raw in _parse_csv_like_paths(paths_value):
+        text = str(raw).strip()
+        if not text:
+            continue
+
+        # Expand globs (local or GCS) first.
+        if "*" in text:
+            for match in sorted(tf.io.gfile.glob(text)):
+                norm = str(match).strip()
+                if norm and norm not in resolved:
+                    resolved.append(norm)
+            continue
+
+        if _is_gcs_uri(text):
+            if tf.io.gfile.exists(text) or tf.io.gfile.glob(text):
+                if text not in resolved:
+                    resolved.append(text)
+            continue
+
+        local = Path(text).expanduser()
+        if local.exists() and local.is_file():
+            norm = str(local)
+            if norm not in resolved:
+                resolved.append(norm)
+    return resolved
+
+
 def _challenge_type(challenge_name: str, submission_specs: Any) -> Any:
     text = str(challenge_name).strip().upper()
     if text in {"SIM_AGENTS", "SIMAGENTS"}:
@@ -108,11 +141,11 @@ def _load_scenarios(
 
     missing = [sid for sid in targets if sid not in scenario_by_id]
     if missing:
-        tfrecord_paths = [Path(p).expanduser() for p in _parse_csv_like_paths(scenario_tfrecords)]
-        if tfrecord_paths:
-            import tensorflow as tf  # pylint: disable=import-outside-toplevel
+        import tensorflow as tf  # pylint: disable=import-outside-toplevel
 
-            dataset = tf.data.TFRecordDataset([str(p) for p in tfrecord_paths if p.exists()])
+        tfrecord_inputs = _expand_tfrecord_inputs(scenario_tfrecords, tf=tf)
+        if tfrecord_inputs:
+            dataset = tf.data.TFRecordDataset(tfrecord_inputs)
             for scenario_bytes in dataset.as_numpy_iterator():
                 scenario = scenario_pb2.Scenario.FromString(scenario_bytes)
                 sid = str(scenario.scenario_id).strip()

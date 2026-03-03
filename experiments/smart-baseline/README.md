@@ -30,9 +30,28 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 - `smoke`: quick sanity mode using SMART demo config (`data/valid_demo`).
 - `paper_repro`: pinned SMART commit + fixed seed + full WOMD processed split config.
 
+Notebook run modes:
+- `WOSAC_RUN_MODE=pilot` (default): small GCS shard staging defaults for fast iteration.
+- `WOSAC_RUN_MODE=full`: larger shard staging defaults for longer training runs.
+
 Set profile in notebook/script:
 - env var `SMART_BASELINE_PROFILE=paper_repro` (notebook)
 - CLI `--profile paper_repro` (script)
+
+## GCS Data Staging (Training Notebook)
+- Default behavior stages WOMD shards from Waymo GCS to local Colab storage under `SMART.raw_data_root`.
+- Key env vars:
+  - `SMART_DATA_SOURCE=gcs_stage` (default)
+  - `SMART_GCS_DATASET_ROOT=gs://waymo_open_dataset_motion_v_1_2_0/scenario`
+  - `SMART_GCS_TRAIN_SPLIT=training`, `SMART_GCS_VAL_SPLIT=validation`
+  - `SMART_GCS_TRAIN_SHARDS`, `SMART_GCS_VAL_SHARDS`
+  - `SMART_RUN_DATA_STAGE=1` (default), `SMART_FORCE_DATA_REDOWNLOAD=0` (default)
+- Raw TFRecords stay on local Colab disk; checkpoints/artifacts persist to Drive.
+
+## Preprocess Resume Policy
+- Notebook auto-detects existing processed `.pkl/.pickle` files.
+- Default behavior: skip preprocessing when processed outputs already exist.
+- Override with `SMART_FORCE_PREPROCESS=1`.
 
 ## Resume Behavior
 - Training auto-resumes from the latest checkpoint in `SMART_BASELINE_CKPT_DIR` when `run.resume_from_existing=true` and no explicit checkpoint override is passed.

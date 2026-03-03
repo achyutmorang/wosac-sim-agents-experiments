@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
@@ -43,6 +44,86 @@ def _parse_csv_like_paths(value: Any) -> List[str]:
 
 def _is_gcs_uri(value: str) -> bool:
     return str(value).strip().startswith("gs://")
+
+
+def _default_metrics_config_filenames(challenge: Any, submission_specs: Any) -> List[str]:
+    if challenge == submission_specs.ChallengeType.SIM_AGENTS:
+        return [
+            "challenge_2025_sim_agents_config.textproto",
+            "challenge_2023_sim_agents_config.textproto",
+        ]
+    if challenge == submission_specs.ChallengeType.SCENARIO_GEN:
+        return [
+            "challenge_2025_scenario_gen_config.textproto",
+            "challenge_2023_scenario_gen_config.textproto",
+        ]
+    return []
+
+
+def _parse_metrics_config_textproto(path: Path, sim_agents_metrics_pb2: Any, text_format: Any) -> Any:
+    cfg = sim_agents_metrics_pb2.SimAgentMetricsConfig()
+    text_format.Parse(path.read_text(encoding="utf-8"), cfg)
+    return cfg
+
+
+def _load_default_metrics_config_safe(
+    *,
+    challenge: Any,
+    metrics_module: Any,
+    sim_agents_metrics_pb2: Any,
+    submission_specs: Any,
+    text_format: Any,
+) -> Any:
+    try:
+        return metrics_module.load_metrics_config(challenge)
+    except FileNotFoundError:
+        pass
+
+    filenames = _default_metrics_config_filenames(challenge, submission_specs=submission_specs)
+    candidates: List[Path] = []
+
+    metrics_file = Path(str(getattr(metrics_module, "__file__", "")).strip()).expanduser()
+    if str(metrics_file).strip():
+        candidates.extend([metrics_file.parent / name for name in filenames])
+
+    try:
+        import waymo_open_dataset as _wod  # pylint: disable=import-outside-toplevel
+
+        site_root = Path(str(_wod.__file__)).resolve().parent.parent
+        candidates.extend(
+            [
+                site_root / "waymo_open_dataset" / "wdl_limited" / "sim_agents_metrics" / name
+                for name in filenames
+            ]
+        )
+
+        # Final fallback: run loader from site-packages cwd because upstream loader uses relative paths.
+        cwd = Path.cwd()
+        try:
+            os.chdir(str(site_root))
+            return metrics_module.load_metrics_config(challenge)
+        except FileNotFoundError:
+            pass
+        finally:
+            os.chdir(str(cwd))
+    except Exception:
+        pass
+
+    tried: List[str] = []
+    seen: set[str] = set()
+    for path in candidates:
+        text = str(path)
+        if text in seen:
+            continue
+        seen.add(text)
+        tried.append(text)
+        if path.exists() and path.is_file():
+            return _parse_metrics_config_textproto(path, sim_agents_metrics_pb2=sim_agents_metrics_pb2, text_format=text_format)
+
+    raise FileNotFoundError(
+        "Could not load default Waymo SimAgents metrics config. "
+        f"Tried loader fallback and candidate files: {tried}"
+    )
 
 
 def _expand_tfrecord_inputs(paths_value: Any, *, tf: Any) -> List[str]:
@@ -181,10 +262,19 @@ def compute_official_metrics_from_rollouts(
 
     challenge = _challenge_type(challenge_type, submission_specs=submission_specs)
     if str(metrics_config_textproto).strip():
-        cfg = sim_agents_metrics_pb2.SimAgentMetricsConfig()
-        text_format.Parse(Path(str(metrics_config_textproto).expanduser()).read_text(encoding="utf-8"), cfg)
+        cfg = _parse_metrics_config_textproto(
+            Path(str(metrics_config_textproto).expanduser()),
+            sim_agents_metrics_pb2=sim_agents_metrics_pb2,
+            text_format=text_format,
+        )
     else:
-        cfg = metrics.load_metrics_config(challenge)
+        cfg = _load_default_metrics_config_safe(
+            challenge=challenge,
+            metrics_module=metrics,
+            sim_agents_metrics_pb2=sim_agents_metrics_pb2,
+            submission_specs=submission_specs,
+            text_format=text_format,
+        )
 
     rollouts_list = _load_rollouts(rollouts_path, sim_agents_submission_pb2=sim_agents_submission_pb2)
     scenario_ids = [str(r.scenario_id).strip() for r in rollouts_list if str(r.scenario_id).strip()]

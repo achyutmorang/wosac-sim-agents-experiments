@@ -74,10 +74,11 @@ def _load_default_metrics_config_safe(
     submission_specs: Any,
     text_format: Any,
 ) -> Any:
+    loader_error = ""
     try:
         return metrics_module.load_metrics_config(challenge)
-    except FileNotFoundError:
-        pass
+    except Exception as exc:
+        loader_error = f"{type(exc).__name__}: {exc}"
 
     filenames = _default_metrics_config_filenames(challenge, submission_specs=submission_specs)
     candidates: List[Path] = []
@@ -102,7 +103,7 @@ def _load_default_metrics_config_safe(
         try:
             os.chdir(str(site_root))
             return metrics_module.load_metrics_config(challenge)
-        except FileNotFoundError:
+        except Exception:
             pass
         finally:
             os.chdir(str(cwd))
@@ -122,6 +123,7 @@ def _load_default_metrics_config_safe(
 
     raise FileNotFoundError(
         "Could not load default Waymo SimAgents metrics config. "
+        f"Initial loader error: {loader_error or 'unknown'}. "
         f"Tried loader fallback and candidate files: {tried}"
     )
 

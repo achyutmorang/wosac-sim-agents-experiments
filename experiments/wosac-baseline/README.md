@@ -13,6 +13,7 @@ Establish a reproducible baseline submission pipeline and first valid metric sna
 - `ScenarioRollouts` generation + protobuf validation via `submission_specs`.
 - official metrics call via `metrics.compute_scenario_metrics_for_bundle`.
 - optional `SimAgentsChallengeSubmission` shard/tar packaging.
+- auto-discovery of a sample `validation.tfrecord-*` shard when `WOSAC_SAMPLE_TFRECORD` is not preset.
 
 ## Workflow Entrypoint
 - `src/workflows/wosac_baseline_flow.py`

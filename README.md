@@ -22,6 +22,7 @@ Active tracks:
 1. `wosac-baseline`: benchmark contract, survey, reference artifacts.
 2. `smart-baseline`: SMART wrapper + reproducibility patch set (`smoke` and `paper_repro` profiles).
 3. `smart-constrained`: constrained variant sweep + separate simulation, strict eval, and comparative eval.
+   - default sweep is pilot-sized to limit compute and support resume-first iteration.
 
 Latest test status: `24 passed` (`PYTHONPATH=. pytest -q`).
 

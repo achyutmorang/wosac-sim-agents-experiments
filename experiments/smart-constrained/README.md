@@ -18,6 +18,7 @@ Train/evaluate a constrained probabilistic variant over SMART baseline and compa
 
 ## Config
 - `configs/experiments/smart-constrained.json`
+  - Default sweep is now pilot-sized (`2 x 1 x 2 = 4` variants) to reduce compute.
 
 ## Artifact Location
 - Persist artifacts to Google Drive under:
@@ -41,11 +42,15 @@ Simulation notebook uses:
 - `WOSAC_SCENARIO_PROTO_PATH`: optional single scenario proto path
 - `WOSAC_SCENARIO_PROTO_DIR`: optional directory of `<scenario_id>.pb` files
 - `WOSAC_SCENARIO_TFRECORDS`: optional fallback TFRecord path list (comma-separated)
+- `WOSAC_AUTO_RESUME=1` (default): auto-discover latest run output dirs/checkpoints/manifests
+- `WOSAC_RUN_SIM_PENDING_ONLY=1` (default): execute only models whose rollout proto is missing
 
 Checkpoint eval notebook uses:
 - `WOSAC_SIM_MANIFESTS_DIR`: directory with `<model_id>_simulation_manifest.json`
 - `WOSAC_MODEL_METRICS_DIR`: optional output directory for computed `<model_id>.json` metrics (auto-created)
 - `WOSAC_SCENARIO_PROTO_PATH` / `WOSAC_SCENARIO_PROTO_DIR` / `WOSAC_SCENARIO_TFRECORDS`: scenario sources for official metric computation
+- `WOSAC_RECOMPUTE_METRICS=0` (default): reuse existing metric JSONs when present
+- `WOSAC_READY_MODELS_ONLY=1` (default): evaluate only models with available rollout protos
 
 Metrics JSON files are computed inline in notebook via official Waymo APIs and include binding keys (`manifest_sha256`, `model_id`, scenario/evaluator/config hashes, rollout settings) so strict contract checks can verify provenance.
 

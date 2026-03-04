@@ -165,6 +165,18 @@ def _safe_repo_commit(repo_dir: Path) -> str:
         return "unknown"
 
 
+def _is_git_worktree(repo_dir: Path) -> bool:
+    try:
+        subprocess.check_output(
+            ["git", "-C", str(repo_dir), "rev-parse", "--is-inside-work-tree"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        return True
+    except Exception:
+        return False
+
+
 def _resolve_path(repo_root: Path, value: str) -> Path:
     p = Path(str(value)).expanduser()
     if p.is_absolute():
@@ -346,10 +358,23 @@ def _collect_checkpoint_manifest(
 def _sync_git_repo(repo_url: str, repo_branch: str, repo_dir: Path, repo_commit: str) -> Dict[str, Any]:
     target_commit = str(repo_commit).strip()
     if repo_dir.exists():
-        subprocess.run(["git", "-C", str(repo_dir), "fetch", "origin"], check=True)
-        subprocess.run(["git", "-C", str(repo_dir), "checkout", repo_branch], check=True)
-        subprocess.run(["git", "-C", str(repo_dir), "pull", "--ff-only", "origin", repo_branch], check=True)
-        mode = "updated"
+        if _is_git_worktree(repo_dir):
+            subprocess.run(["git", "-C", str(repo_dir), "fetch", "origin"], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "checkout", repo_branch], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "pull", "--ff-only", "origin", repo_branch], check=True)
+            mode = "updated"
+        else:
+            # Colab data staging may create /content/SMART before repo sync.
+            # Initialize git in-place so we can keep existing staged data paths.
+            subprocess.run(["git", "-C", str(repo_dir), "init"], check=True)
+            remotes = subprocess.check_output(["git", "-C", str(repo_dir), "remote"], text=True).split()
+            if "origin" in remotes:
+                subprocess.run(["git", "-C", str(repo_dir), "remote", "set-url", "origin", repo_url], check=True)
+            else:
+                subprocess.run(["git", "-C", str(repo_dir), "remote", "add", "origin", repo_url], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "fetch", "origin"], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "checkout", "-B", repo_branch, f"origin/{repo_branch}"], check=True)
+            mode = "initialized_existing_dir"
     else:
         repo_dir.parent.mkdir(parents=True, exist_ok=True)
         clone_cmd = ["git", "clone", "-b", repo_branch]

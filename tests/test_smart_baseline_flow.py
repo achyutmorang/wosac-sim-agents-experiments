@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 from src.workflows import run_smart_baseline_flow
@@ -122,3 +123,36 @@ def test_smart_baseline_flow_auto_resume_uses_latest_checkpoint(tmp_path: Path) 
     assert str(ckpt_new) in bundle.command_plan["train_cmd"]
     assert bundle.summary["smart_ckpt_path"] == str(ckpt_new)
     assert bundle.summary["resume_resolution"]["source"] == "auto_latest"
+
+
+def test_smart_baseline_flow_sync_bootstraps_existing_non_git_dir(tmp_path: Path) -> None:
+    source_repo = tmp_path / "source_repo"
+    source_repo.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "init", "-b", "main"], cwd=source_repo, check=True, stdout=subprocess.DEVNULL)
+    (source_repo / "README.md").write_text("smart source\n", encoding="utf-8")
+    subprocess.run(["git", "add", "README.md"], cwd=source_repo, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(
+        ["git", "-c", "user.email=test@example.com", "-c", "user.name=Test User", "commit", "-m", "init"],
+        cwd=source_repo,
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+
+    smart_repo_dir = tmp_path / "SMART"
+    (smart_repo_dir / "data" / "waymo" / "scenario").mkdir(parents=True, exist_ok=True)
+
+    bundle = run_smart_baseline_flow(
+        repo_root=tmp_path,
+        persist_root=tmp_path / "persist",
+        run_prefix="smart_baseline",
+        run_name="dev",
+        run_tag="20260302T000000Z",
+        sync_smart_repo=True,
+        smart_repo_url=str(source_repo),
+        smart_repo_branch="main",
+        smart_repo_dir=str(smart_repo_dir),
+    )
+
+    assert bundle.summary["status"] == "ready"
+    assert bundle.summary["smart_repo_sync"]["mode"] == "initialized_existing_dir"
+    assert (smart_repo_dir / "README.md").exists()

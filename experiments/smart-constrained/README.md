@@ -71,4 +71,4 @@ The workflow selects the best feasible variant by:
   - `SMART_GCS_TRAIN_SHARDS`, `SMART_GCS_VAL_SHARDS`
   - `SMART_RUN_DATA_STAGE=1` (default), `SMART_FORCE_DATA_REDOWNLOAD=0` (default)
 - Preprocess auto-skip logic is enabled by default when processed outputs already exist; override with `SMART_FORCE_PREPROCESS=1`.
-- Safety default: `SMART_AUTO_SETUP=1` auto-enables setup when preprocess/train is requested.
+- Safety default: `SMART_AUTO_SETUP=1` auto-enables setup when training is requested.

@@ -52,6 +52,7 @@ Set profile in notebook/script:
 - Notebook auto-detects existing processed `.pkl/.pickle` files.
 - Default behavior: skip preprocessing when processed outputs already exist.
 - Override with `SMART_FORCE_PREPROCESS=1`.
+- Safety default: `SMART_AUTO_SETUP=1` auto-enables setup when preprocess/train is requested.
 
 ## Resume Behavior
 - Training auto-resumes from the latest checkpoint in `SMART_BASELINE_CKPT_DIR` when `run.resume_from_existing=true` and no explicit checkpoint override is passed.

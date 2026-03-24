@@ -53,6 +53,7 @@ Set profile in notebook/script:
 - Default behavior: skip preprocessing when processed outputs already exist.
 - Override with `SMART_FORCE_PREPROCESS=1`.
 - Safety default: `SMART_AUTO_SETUP=1` auto-enables setup when training is requested.
+- Preprocess commands now self-bootstrap their minimal runtime (`tensorflow`, `waymo_open_dataset`, `easydict`) without requiring the full legacy SMART training environment.
 
 ## Resume Behavior
 - Training auto-resumes from the latest checkpoint in `SMART_BASELINE_CKPT_DIR` when `run.resume_from_existing=true` and no explicit checkpoint override is passed.

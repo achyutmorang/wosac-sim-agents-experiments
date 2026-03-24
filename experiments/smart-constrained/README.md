@@ -72,3 +72,4 @@ The workflow selects the best feasible variant by:
   - `SMART_RUN_DATA_STAGE=1` (default), `SMART_FORCE_DATA_REDOWNLOAD=0` (default)
 - Preprocess auto-skip logic is enabled by default when processed outputs already exist; override with `SMART_FORCE_PREPROCESS=1`.
 - Safety default: `SMART_AUTO_SETUP=1` auto-enables setup when training is requested.
+- Preprocess commands self-bootstrap their minimal runtime (`tensorflow`, `waymo_open_dataset`, `easydict`) without requiring the full legacy SMART training environment.

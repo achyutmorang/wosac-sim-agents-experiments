@@ -419,9 +419,16 @@ def _build_command_plan(
         setup_steps.append("python -m pip install -r requirements.txt")
     setup_steps.append("bash scripts/install_pyg.sh" if install_pyg else "echo 'skip install_pyg.sh'")
     setup_cmd = " && ".join(setup_steps)
+    preprocess_runtime_setup = " && ".join(
+        [
+            f"cd {_q(repo_root)}",
+            f"python {_q(str((repo_root / 'scripts' / 'ensure_smart_preprocess_runtime.py').resolve()))}",
+        ]
+    )
 
     preprocess_train_cmd = " && ".join(
         [
+            preprocess_runtime_setup,
             f"cd {_q(smart_repo_dir)}",
             " ".join(
                 [
@@ -434,6 +441,7 @@ def _build_command_plan(
     )
     preprocess_val_cmd = " && ".join(
         [
+            preprocess_runtime_setup,
             f"cd {_q(smart_repo_dir)}",
             " ".join(
                 [

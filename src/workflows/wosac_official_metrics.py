@@ -188,6 +188,43 @@ def _load_scenario_from_proto(path: Path, scenario_pb2: Any) -> Any:
     return scenario
 
 
+def _format_missing_scenarios_error(
+    *,
+    required_ids: Sequence[str],
+    missing_ids: Sequence[str],
+    scenario_proto_path: str = "",
+    scenario_proto_dir: str = "",
+    scenario_tfrecords: Any = None,
+) -> str:
+    source_bits = []
+    if str(scenario_proto_path).strip():
+        source_bits.append(f"scenario_proto_path={scenario_proto_path}")
+    if str(scenario_proto_dir).strip():
+        source_bits.append(f"scenario_proto_dir={scenario_proto_dir}")
+    tfrecord_inputs = _parse_csv_like_paths(scenario_tfrecords)
+    if tfrecord_inputs:
+        source_bits.append(f"scenario_tfrecords={','.join(tfrecord_inputs)}")
+
+    source_text = "; ".join(source_bits) if source_bits else "no scenario source was provided"
+    total_required = len([str(sid).strip() for sid in required_ids if str(sid).strip()])
+    total_missing = len([str(sid).strip() for sid in missing_ids if str(sid).strip()])
+    missing_preview = ", ".join(str(sid) for sid in list(missing_ids)[:12])
+
+    message = (
+        "Missing scenario protos for rollout scenario_ids. "
+        f"Matched {total_required - total_missing}/{total_required} scenarios from the provided source(s): {source_text}. "
+        f"Missing ids (up to 12 shown): {missing_preview}."
+    )
+    if tfrecord_inputs:
+        message += (
+            " This usually means the rollout proto was generated from a different scenario set than the one supplied for evaluation. "
+            "A common case is SMART smoke/demo rollouts generated from data/valid_demo: those scenario ids are not guaranteed to exist in the public validation TFRecords, "
+            "so official WOSAC metrics cannot be computed for that smoke run. "
+            "Use official validation scenarios or paper-repro data for rollout export, or treat this run as a pipeline smoke test only."
+        )
+    return message
+
+
 def _load_scenarios(
     *,
     required_ids: Sequence[str],
@@ -289,7 +326,15 @@ def compute_official_metrics_from_rollouts(
     )
     missing = [sid for sid in scenario_ids if sid not in scenarios]
     if missing:
-        raise ValueError(f"Missing scenario protos for scenario_ids: {missing}")
+        raise ValueError(
+            _format_missing_scenarios_error(
+                required_ids=scenario_ids,
+                missing_ids=missing,
+                scenario_proto_path=scenario_proto_path,
+                scenario_proto_dir=scenario_proto_dir,
+                scenario_tfrecords=scenario_tfrecords,
+            )
+        )
 
     per_scenario = []
     scenario_metrics_protos = []

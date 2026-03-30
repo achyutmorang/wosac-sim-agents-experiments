@@ -21,6 +21,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from src.platform.smart_rollout_paths import normalize_dataset_paths, normalize_path_value
 from src.platform.smart_rollout_submission import (
     build_joint_scene_spec,
     build_scenario_rollouts_spec,
@@ -80,7 +81,9 @@ def _build_dataset(config_path: str, *, smart_repo_dir: Path) -> tuple[Any, Any,
     from smart.transforms import WaymoTargetBuilder  # pylint: disable=import-outside-toplevel
     from smart.utils.config import load_config_act  # pylint: disable=import-outside-toplevel
 
-    config = load_config_act(config_path)
+    resolved_config_path = normalize_path_value(config_path, base_dir=smart_repo_dir)
+    config = load_config_act(str(resolved_config_path))
+    config = normalize_dataset_paths(config, smart_repo_dir=smart_repo_dir)
     data_config = config.Dataset
     model_config = config.Model
     dataset = MultiDataset(

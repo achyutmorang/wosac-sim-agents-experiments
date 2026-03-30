@@ -47,6 +47,22 @@ def test_smart_baseline_flow_ready_without_sync(tmp_path: Path) -> None:
     assert "splits" in data_manifest
 
 
+def test_smart_baseline_flow_smoke_uses_modern_setup_helper(tmp_path: Path) -> None:
+    bundle = run_smart_baseline_flow(
+        repo_root=tmp_path,
+        persist_root=tmp_path / "persist",
+        run_prefix="smart_baseline",
+        run_name="dev",
+        run_tag="20260302T000000Z",
+        sync_smart_repo=False,
+        smart_profile="smoke",
+    )
+
+    assert "ensure_smart_train_runtime.py" in bundle.command_plan["setup_cmd"]
+    assert "requirements-smart-exact-cu113.txt" not in bundle.command_plan["setup_cmd"]
+    assert bundle.summary["smart_setup_mode"] == "modern_colab_smoke"
+
+
 def test_smart_baseline_flow_ingests_metrics_json(tmp_path: Path) -> None:
     metrics_input = {
         "scores": {

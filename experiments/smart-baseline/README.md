@@ -25,10 +25,13 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 - `experiments/smart-baseline/reproducibility.md`
 - strict env lock: `experiments/smart-baseline/env/requirements-smart-exact-cu113.txt`
 - deterministic launcher: `scripts/smart_train_repro.py`
+- modern Colab smoke-train helper: `scripts/ensure_smart_train_runtime.py`
 
 ## Profiles
 - `smoke`: quick sanity mode using SMART demo config (`data/valid_demo`).
 - `paper_repro`: pinned SMART commit + fixed seed + full WOMD processed split config.
+- `smoke` uses a modern Colab-compatible training setup helper instead of the legacy `cu113/cp39` lock.
+- `paper_repro` keeps the exact upstream-style environment path and is not expected to install cleanly on modern Colab Python 3.12 runtimes.
 
 Notebook run modes:
 - `WOSAC_RUN_MODE=pilot` (default): small GCS shard staging defaults for fast iteration.

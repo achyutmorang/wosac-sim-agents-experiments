@@ -37,6 +37,8 @@ baseline flow writes data split manifests and checkpoint SHA256 manifests into r
 use notebook + dry-run command plan and optional stage execution.
 2. Paper-repro baseline mode (Linux/CUDA11.3):
 use `--profile paper_repro` so run uses pinned SMART commit, strict lockfile, deterministic seed, and paper-repro configs.
+3. Smoke training mode (modern Colab):
+use `--profile smoke`; the wrapper swaps in `scripts/ensure_smart_train_runtime.py` so sanity-check training does not depend on the legacy `cp39/cu113` wheel stack.
 
 ## One-Command Examples
 Dry-run only (safe):

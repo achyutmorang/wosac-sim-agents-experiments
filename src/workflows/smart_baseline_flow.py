@@ -411,14 +411,23 @@ def _build_command_plan(
     train_seed: int,
     deterministic_train: bool,
     train_launcher_path: str,
+    smart_profile: str,
 ) -> Dict[str, str]:
-    setup_steps = [f"cd {_q(smart_repo_dir)}"]
-    if str(env_lockfile).strip():
-        setup_steps.append(f"python -m pip install -r {_q(env_lockfile)}")
+    if str(smart_profile).strip().lower() == "smoke":
+        setup_cmd = " && ".join(
+            [
+                f"cd {_q(repo_root)}",
+                f"python {_q(str((repo_root / 'scripts' / 'ensure_smart_train_runtime.py').resolve()))}",
+            ]
+        )
     else:
-        setup_steps.append("python -m pip install -r requirements.txt")
-    setup_steps.append("bash scripts/install_pyg.sh" if install_pyg else "echo 'skip install_pyg.sh'")
-    setup_cmd = " && ".join(setup_steps)
+        setup_steps = [f"cd {_q(smart_repo_dir)}"]
+        if str(env_lockfile).strip():
+            setup_steps.append(f"python -m pip install -r {_q(env_lockfile)}")
+        else:
+            setup_steps.append("python -m pip install -r requirements.txt")
+        setup_steps.append("bash scripts/install_pyg.sh" if install_pyg else "echo 'skip install_pyg.sh'")
+        setup_cmd = " && ".join(setup_steps)
     preprocess_runtime_setup = " && ".join(
         [
             f"cd {_q(repo_root)}",
@@ -585,6 +594,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         train_seed=train_seed,
         deterministic_train=deterministic_train,
         train_launcher_path=train_launcher_path,
+        smart_profile=smart_profile,
     )
     data_manifest = _collect_data_manifest(raw_data_root=raw_data_root, processed_data_root=processed_data_root)
     checkpoint_manifest = _collect_checkpoint_manifest(
@@ -621,6 +631,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         "smart_repo_dir": str(smart_repo_dir),
         "smart_repo_sync": sync_result,
         "smart_profile": smart_profile,
+        "smart_setup_mode": "modern_colab_smoke" if smart_profile.lower() == "smoke" else "exact_upstream",
         "smart_train_seed": int(train_seed),
         "smart_deterministic_train": bool(deterministic_train),
         "smart_env_lockfile": env_lockfile,

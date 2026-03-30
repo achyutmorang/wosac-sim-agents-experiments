@@ -140,6 +140,26 @@ def _resolve_path(repo_root: Path, value: str) -> Path:
     return (repo_root / p).resolve()
 
 
+def _resolve_config_arg(*, repo_root: Path, smart_repo_dir: Path, value: str) -> str:
+    text = str(value).strip()
+    if not text:
+        return text
+
+    candidate = Path(text).expanduser()
+    if candidate.is_absolute():
+        return str(candidate)
+
+    repo_candidate = (repo_root / candidate).resolve()
+    if repo_candidate.exists():
+        return str(repo_candidate)
+
+    smart_candidate = (smart_repo_dir / candidate).resolve()
+    if smart_candidate.exists():
+        return str(smart_candidate)
+
+    return text
+
+
 def _paths_match(left: str, right: str) -> bool:
     if (not str(left).strip()) or (not str(right).strip()):
         return False
@@ -283,7 +303,11 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
     smart_repo_url = str(kwargs.get("smart_repo_url", "https://github.com/rainmaker22/SMART.git"))
     smart_repo_branch = str(kwargs.get("smart_repo_branch", "main"))
     smart_repo_dir = Path(str(kwargs.get("smart_repo_dir", "/content/SMART")))
-    smart_val_config = str(kwargs.get("smart_val_config", "configs/validation/validation_scalable.yaml"))
+    smart_val_config = _resolve_config_arg(
+        repo_root=repo_root,
+        smart_repo_dir=smart_repo_dir,
+        value=str(kwargs.get("smart_val_config", "configs/validation/validation_scalable.yaml")),
+    )
     sync_smart_repo = bool(kwargs.get("sync_smart_repo", False))
     strict_contract = bool(kwargs.get("strict_contract", False))
     require_metrics_binding = bool(kwargs.get("require_metrics_binding", strict_contract))
@@ -464,6 +488,7 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
         "smart_repo_url": smart_repo_url,
         "smart_repo_branch": smart_repo_branch,
         "smart_repo_dir": str(smart_repo_dir),
+        "smart_val_config": smart_val_config,
         "smart_repo_sync": sync_result,
         "sync_error": sync_error,
         "metrics_dir": str(metrics_dir) if metrics_dir is not None else "",

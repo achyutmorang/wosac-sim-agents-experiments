@@ -13,6 +13,9 @@ from src.workflows import (
 def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: Path) -> None:
     metrics_dir = tmp_path / "metrics"
     metrics_dir.mkdir(parents=True, exist_ok=True)
+    wrapper_config = tmp_path / "experiments" / "smart-baseline" / "configs" / "validation_scalable_paper_repro.yaml"
+    wrapper_config.parent.mkdir(parents=True, exist_ok=True)
+    wrapper_config.write_text("Dataset:\n  val_raw_dir: []\n", encoding="utf-8")
 
     (metrics_dir / "smart_baseline.json").write_text(
         json.dumps(
@@ -49,6 +52,7 @@ def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: 
         run_tag="20260302T000000Z",
         sync_smart_repo=False,
         smart_repo_dir=str(tmp_path / "SMART"),
+        smart_val_config="experiments/smart-baseline/configs/validation_scalable_paper_repro.yaml",
         models=[
             {"model_id": "smart_baseline", "checkpoint_path": "/tmp/smart_baseline.ckpt"},
             {
@@ -66,6 +70,7 @@ def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: 
     baseline = next(m for m in bundle.models if m["model_id"] == "smart_baseline")
     variant = next(m for m in bundle.models if m["model_id"] == "variant_1")
     assert "python val.py" in baseline["validate_cmd"]
+    assert str(wrapper_config) in baseline["validate_cmd"]
     assert "--pretrain_ckpt /tmp/smart_baseline.ckpt" in baseline["validate_cmd"]
     assert "SMART_TEMP=1.1 python val.py" in variant["validate_cmd"]
     assert variant["metrics"]["realism_meta_metric"] == 0.764

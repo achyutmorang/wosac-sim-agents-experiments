@@ -9,6 +9,12 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.platform.smart_modern_compat import patch_waymo_target_builder
+
 
 def _run_pip(args: Iterable[str]) -> None:
     cmd = [sys.executable, "-m", "pip", *list(args)]
@@ -141,6 +147,12 @@ def _probe_smart_training_imports(smart_repo_dir: str) -> None:
     importlib.import_module("train")
 
 
+def _apply_smart_modern_compat(smart_repo_dir: str) -> None:
+    result = patch_waymo_target_builder(smart_repo_dir)
+    status = "already-compatible" if result.already_compatible else "patched"
+    print(f"[smart-train-setup] target_builder {status}: {result.target_builder_path}")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Ensure SMART smoke-training runtime on modern Colab.")
     parser.add_argument("--smart-repo-dir", type=str, default="")
@@ -156,6 +168,7 @@ def main() -> int:
     _ensure_pyg_stack()
     importlib.import_module("waymo_open_dataset.protos.sim_agents_submission_pb2")
     if str(args.smart_repo_dir).strip():
+        _apply_smart_modern_compat(args.smart_repo_dir)
         _probe_smart_training_imports(args.smart_repo_dir)
     print("[smart-train-setup] runtime ready")
     return 0

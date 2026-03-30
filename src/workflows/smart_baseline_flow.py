@@ -417,7 +417,10 @@ def _build_command_plan(
         setup_cmd = " && ".join(
             [
                 f"cd {_q(repo_root)}",
-                f"python {_q(str((repo_root / 'scripts' / 'ensure_smart_train_runtime.py').resolve()))}",
+                (
+                    f"python {_q(str((repo_root / 'scripts' / 'ensure_smart_train_runtime.py').resolve()))} "
+                    f"--smart-repo-dir {_q(smart_repo_dir)}"
+                ),
             ]
         )
     else:

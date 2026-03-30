@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import random
 import runpy
 import sys
+import traceback
+from importlib import metadata
 from pathlib import Path
 
 import numpy as np
@@ -58,6 +61,13 @@ def _configure_reproducibility(*, seed: int, deterministic: bool) -> None:
             pass
 
 
+def _safe_version(package_name: str) -> str:
+    try:
+        return str(metadata.version(package_name))
+    except Exception:
+        return "not_installed"
+
+
 def main() -> int:
     args = parse_args()
     deterministic = _bool_arg(args.deterministic, args.no_deterministic, True)
@@ -83,7 +93,29 @@ def main() -> int:
 
     os.chdir(str(smart_repo_dir))
     sys.argv = argv
-    runpy.run_path(str(train_py), run_name="__main__")
+    try:
+        runpy.run_path(str(train_py), run_name="__main__")
+    except Exception as exc:
+        debug_payload = {
+            "smart_repo_dir": str(smart_repo_dir),
+            "config": str(args.config),
+            "save_ckpt_path": str(args.save_ckpt_path),
+            "seed": seed,
+            "deterministic": bool(deterministic),
+            "python_version": str(sys.version.split()[0]),
+            "torch": _safe_version("torch"),
+            "pytorch_lightning": _safe_version("pytorch-lightning"),
+            "torch_geometric": _safe_version("torch-geometric"),
+            "torch_scatter": _safe_version("torch-scatter"),
+            "torch_cluster": _safe_version("torch-cluster"),
+            "waymo_open_dataset": _safe_version("waymo-open-dataset-tf-2-12-0"),
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+        }
+        print("[smart-train-repro] training failed")
+        print(json.dumps(debug_payload, indent=2, sort_keys=True))
+        traceback.print_exc()
+        raise
     return 0
 
 

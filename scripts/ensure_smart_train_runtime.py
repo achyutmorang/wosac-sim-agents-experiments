@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import importlib
 import re
 import subprocess
 import sys
+from pathlib import Path
 from typing import Iterable
 
 
@@ -33,6 +35,41 @@ def _ensure_import(module_name: str, package_spec: str) -> None:
     ok, err = _can_import(module_name)
     if not ok:
         raise RuntimeError(f"Unable to import {module_name} after install: {err}")
+
+
+def _ensure_waymo_open_dataset() -> None:
+    ok, err = _can_import("waymo_open_dataset")
+    if ok:
+        return
+
+    py_major, py_minor = sys.version_info[:2]
+    print(f"[smart-train-setup] missing waymo_open_dataset: {err}")
+    if (py_major, py_minor) >= (3, 12):
+        candidates = [
+            ["install", "--upgrade", "--no-deps", "waymo-open-dataset-tf-2-12-0==1.6.7"],
+            ["install", "--upgrade", "--no-deps", "waymo-open-dataset-tf-2-12-0==1.6.4"],
+        ]
+    else:
+        candidates = [
+            ["install", "--upgrade", "waymo-open-dataset-tf-2-12-0==1.6.7"],
+            ["install", "--upgrade", "waymo-open-dataset-tf-2-12-0==1.6.4"],
+        ]
+
+    errors: list[str] = []
+    for args in candidates:
+        try:
+            _run_pip(args)
+            ok, err = _can_import("waymo_open_dataset")
+            if ok:
+                return
+            errors.append(f"{' '.join(args)} -> import failed: {err}")
+        except Exception as exc:
+            errors.append(f"{' '.join(args)} -> {type(exc).__name__}: {exc}")
+
+    raise RuntimeError(
+        "Unable to install/import waymo_open_dataset for SMART training. "
+        + " | ".join(errors)
+    )
 
 
 def _resolve_torch_and_cuda_tags() -> tuple[str, str]:
@@ -95,11 +132,31 @@ def _ensure_pyg_stack() -> None:
             raise RuntimeError(f"PyG dependency not importable after setup: {module_name} ({err})")
 
 
+def _probe_smart_training_imports(smart_repo_dir: str) -> None:
+    repo_dir = Path(str(smart_repo_dir)).expanduser().resolve()
+    if not repo_dir.exists():
+        raise FileNotFoundError(f"SMART repo dir does not exist: {repo_dir}")
+    sys.path.insert(0, str(repo_dir))
+    importlib.invalidate_caches()
+    importlib.import_module("train")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Ensure SMART smoke-training runtime on modern Colab.")
+    parser.add_argument("--smart-repo-dir", type=str, default="")
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     _ensure_import("yaml", "PyYAML")
     _ensure_import("easydict", "easydict==1.13")
     _ensure_import("pytorch_lightning", "pytorch-lightning>=2.4,<2.6")
+    _ensure_waymo_open_dataset()
     _ensure_pyg_stack()
+    importlib.import_module("waymo_open_dataset.protos.sim_agents_submission_pb2")
+    if str(args.smart_repo_dir).strip():
+        _probe_smart_training_imports(args.smart_repo_dir)
     print("[smart-train-setup] runtime ready")
     return 0
 

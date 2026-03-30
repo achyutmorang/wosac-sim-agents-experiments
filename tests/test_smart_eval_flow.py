@@ -72,7 +72,12 @@ def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: 
     assert "python val.py" in baseline["validate_cmd"]
     assert str(wrapper_config) in baseline["validate_cmd"]
     assert "--pretrain_ckpt /tmp/smart_baseline.ckpt" in baseline["validate_cmd"]
+    assert "python " in baseline["rollout_cmd"]
+    assert "scripts/smart_rollout_export.py" in baseline["rollout_cmd"]
+    assert "--output-path " in baseline["rollout_cmd"]
+    assert baseline["scenario_rollouts_path"].endswith("smart_baseline.binproto")
     assert "SMART_TEMP=1.1 python val.py" in variant["validate_cmd"]
+    assert "SMART_TEMP=1.1 python " in variant["rollout_cmd"]
     assert variant["metrics"]["realism_meta_metric"] == 0.764
 
 

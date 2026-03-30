@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shlex
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -204,6 +205,10 @@ def _inject_env(cmd: str, env_map: Mapping[str, Any], needle: str) -> str:
     return f"{env_prefix} {cmd}"
 
 
+def _q(value: Any) -> str:
+    return shlex.quote(str(value))
+
+
 def _parse_models(models: Any) -> List[Dict[str, Any]]:
     if models is None:
         return []
@@ -293,6 +298,47 @@ def _build_validate_cmd(
     return _inject_env(validate_cmd, env_map=env_map, needle="python val.py")
 
 
+def _build_rollout_cmd(
+    *,
+    repo_root: Path,
+    smart_repo_dir: Path,
+    val_config: str,
+    checkpoint_path: str,
+    scenario_rollouts_path: str,
+    env_map: Mapping[str, Any],
+    rollout_count: int,
+    seed: int,
+    scenario_proto_path: str,
+    scenario_proto_dir: str,
+    scenario_tfrecords: str,
+    strict_validation: bool,
+) -> str:
+    script_path = repo_root / "scripts" / "smart_rollout_export.py"
+    parts = [
+        f"cd {_q(repo_root)}",
+        (
+            "python "
+            f"{_q(script_path)} "
+            f"--smart-repo-dir {_q(smart_repo_dir)} "
+            f"--config {_q(val_config)} "
+            f"--pretrain-ckpt {_q(checkpoint_path)} "
+            f"--output-path {_q(scenario_rollouts_path)} "
+            f"--rollout-count {int(rollout_count)} "
+            f"--seed {int(seed)}"
+        ),
+    ]
+    if str(scenario_proto_path).strip():
+        parts[-1] += f" --scenario-proto-path {_q(scenario_proto_path)}"
+    if str(scenario_proto_dir).strip():
+        parts[-1] += f" --scenario-proto-dir {_q(scenario_proto_dir)}"
+    if str(scenario_tfrecords).strip():
+        parts[-1] += f" --scenario-tfrecords {_q(scenario_tfrecords)}"
+    if strict_validation:
+        parts[-1] += " --strict-validation"
+    rollout_cmd = " && ".join(parts)
+    return _inject_env(rollout_cmd, env_map=env_map, needle="python ")
+
+
 def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
     repo_root = Path(str(kwargs.get("repo_root", "."))).resolve()
     run_tag = str(kwargs.get("run_tag", _utc_now_iso().replace("-", "").replace(":", "")))
@@ -312,8 +358,14 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
     strict_contract = bool(kwargs.get("strict_contract", False))
     require_metrics_binding = bool(kwargs.get("require_metrics_binding", strict_contract))
     verify_checkpoint_hash = bool(kwargs.get("verify_checkpoint_hash", strict_contract))
+    strict_rollout_validation = bool(kwargs.get("strict_rollout_validation", False))
     binding_keys = _normalize_key_list(kwargs.get("binding_keys"), fallback=DEFAULT_BINDING_KEYS)
     compatibility_keys = _normalize_key_list(kwargs.get("compatibility_keys"), fallback=DEFAULT_COMPATIBILITY_KEYS)
+    rollout_count = int(kwargs.get("n_rollouts", 32))
+    sim_seed = int(kwargs.get("seed", 2))
+    scenario_proto_path = str(kwargs.get("scenario_proto_path", "")).strip()
+    scenario_proto_dir = str(kwargs.get("scenario_proto_dir", "")).strip()
+    scenario_tfrecords = str(kwargs.get("scenario_tfrecords", "")).strip()
 
     models = _parse_models(kwargs.get("models"))
     if not models:
@@ -381,11 +433,35 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
 
         env_map = model.get("env", {})
         env_data = dict(env_map) if isinstance(env_map, Mapping) else {}
+        scenario_rollouts_path = str(model.get("scenario_rollouts_path", "")).strip()
+        if not scenario_rollouts_path:
+            scenario_rollouts_path = str(
+                persist_root
+                / f"{run_prefix}_{run_name}"
+                / "outputs"
+                / run_tag
+                / "rollout_protos"
+                / f"{model_id}.binproto"
+            )
         validate_cmd = _build_validate_cmd(
             smart_repo_dir=smart_repo_dir,
             val_config=smart_val_config,
             checkpoint_path=checkpoint_path,
             env_map=env_data,
+        )
+        rollout_cmd = _build_rollout_cmd(
+            repo_root=repo_root,
+            smart_repo_dir=smart_repo_dir,
+            val_config=smart_val_config,
+            checkpoint_path=checkpoint_path,
+            scenario_rollouts_path=scenario_rollouts_path,
+            env_map=env_data,
+            rollout_count=rollout_count,
+            seed=sim_seed,
+            scenario_proto_path=scenario_proto_path,
+            scenario_proto_dir=scenario_proto_dir,
+            scenario_tfrecords=scenario_tfrecords,
+            strict_validation=strict_rollout_validation,
         )
 
         metrics = {k: None for k in _METRIC_ALIASES}
@@ -451,6 +527,8 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
                 "checkpoint_exists": bool(Path(checkpoint_path).expanduser().exists()) if checkpoint_path else False,
                 "env": env_data,
                 "validate_cmd": validate_cmd,
+                "rollout_cmd": rollout_cmd,
+                "scenario_rollouts_path": scenario_rollouts_path,
                 "manifest_json": str(manifest_path) if manifest_path is not None else "",
                 "manifest_source": manifest_source,
                 "manifest_sha256": manifest_hash,
@@ -496,6 +574,12 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
         "strict_contract": strict_contract,
         "require_metrics_binding": require_metrics_binding,
         "verify_checkpoint_hash": verify_checkpoint_hash,
+        "strict_rollout_validation": strict_rollout_validation,
+        "n_rollouts": rollout_count,
+        "seed": sim_seed,
+        "scenario_proto_path": scenario_proto_path,
+        "scenario_proto_dir": scenario_proto_dir,
+        "scenario_tfrecords": scenario_tfrecords,
         "binding_keys": binding_keys,
         "compatibility_keys": compatibility_keys,
         "num_models": len(model_rows),

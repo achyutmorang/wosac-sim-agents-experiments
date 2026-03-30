@@ -78,6 +78,9 @@ def main() -> int:
     train_py = smart_repo_dir / "train.py"
     if not train_py.exists():
         raise FileNotFoundError(f"Missing SMART train.py at: {train_py}")
+    smart_repo_str = str(smart_repo_dir)
+    if smart_repo_str not in sys.path:
+        sys.path.insert(0, smart_repo_str)
 
     argv = [
         "train.py",

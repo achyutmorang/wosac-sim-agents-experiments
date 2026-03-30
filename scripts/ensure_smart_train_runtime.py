@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.platform.smart_modern_compat import patch_waymo_target_builder
+from src.platform.smart_modern_compat import patch_smart_checkpoint_loader, patch_waymo_target_builder
 
 
 def _run_pip(args: Iterable[str]) -> None:
@@ -148,9 +148,14 @@ def _probe_smart_training_imports(smart_repo_dir: str) -> None:
 
 
 def _apply_smart_modern_compat(smart_repo_dir: str) -> None:
-    result = patch_waymo_target_builder(smart_repo_dir)
-    status = "already-compatible" if result.already_compatible else "patched"
-    print(f"[smart-train-setup] target_builder {status}: {result.target_builder_path}")
+    patchers = [
+        ("target_builder", patch_waymo_target_builder),
+        ("checkpoint_loader", patch_smart_checkpoint_loader),
+    ]
+    for label, patcher in patchers:
+        result = patcher(smart_repo_dir)
+        status = "already-compatible" if result.already_compatible else "patched"
+        print(f"[smart-train-setup] {label} {status}: {result.target_path}")
 
 
 def parse_args() -> argparse.Namespace:

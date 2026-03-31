@@ -3,9 +3,15 @@
 ## Objective
 Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned reporting.
 
-## Notebook
-- Open in Colab: https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb
-- `experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb`
+## Notebooks
+- Data prep: `experiments/smart-baseline/notebooks/smart_data_prep_colab.ipynb`
+- Training: `experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb`
+- Baseline eval: `experiments/smart-baseline/notebooks/smart_baseline_eval_colab.ipynb`
+
+Open in Colab:
+- https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart_data_prep_colab.ipynb
+- https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb
+- https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart_baseline_eval_colab.ipynb
 
 ## Workflow Entrypoint
 - `src/workflows/smart_baseline_flow.py`
@@ -41,7 +47,12 @@ Set profile in notebook/script:
 - env var `SMART_BASELINE_PROFILE=paper_repro` (notebook)
 - CLI `--profile paper_repro` (script)
 
-## GCS Data Staging (Training Notebook)
+## Stage Ownership
+- `smart_data_prep_colab.ipynb`: GCS staging, SMART preprocessing, Drive persistence.
+- `smart-baseline_colab.ipynb`: checkpoint training only.
+- `smart_baseline_eval_colab.ipynb`: rollout export plus official metrics only.
+
+## GCS Data Staging (Data Prep Notebook)
 - Default behavior stages WOMD shards from Waymo GCS to local Colab storage under `SMART.raw_data_root`.
 - Key env vars:
   - `SMART_DATA_SOURCE=gcs_stage` (default)
@@ -51,12 +62,17 @@ Set profile in notebook/script:
   - `SMART_RUN_DATA_STAGE=1` (default), `SMART_FORCE_DATA_REDOWNLOAD=0` (default)
 - Raw TFRecords stay on local Colab disk; checkpoints/artifacts persist to Drive.
 
+## Processed Data Persistence
+- Preprocessed SMART samples should be treated as persisted assets, not ephemeral Colab files.
+- Recommended durable root: `/content/drive/MyDrive/wosac_experiments/datasets/waymo_processed`
+- Helper script: `scripts/persist_processed_split.py`
+- Train/eval notebooks support `SMART_PROCESSED_DATA_ROOT` and rebind `/content/SMART/data/waymo_processed` to the persisted root when needed.
+
 ## Preprocess Resume Policy
-- Notebook auto-detects existing processed `.pkl/.pickle` files.
-- Default behavior: skip preprocessing when processed outputs already exist.
-- Override with `SMART_FORCE_PREPROCESS=1`.
-- Safety default: `SMART_AUTO_SETUP=1` auto-enables setup when training is requested.
-- Preprocess commands now self-bootstrap their minimal runtime (`tensorflow`, `waymo_open_dataset`, `easydict`) without requiring the full legacy SMART training environment.
+- Data prep notebook auto-detects existing processed `.pkl/.pickle` files.
+- Default behavior: preprocess only the selected splits and persist them immediately.
+- Training notebook refuses to preprocess; use the data-prep notebook instead.
+- Preprocess commands self-bootstrap their minimal runtime (`tensorflow`, `waymo_open_dataset`, `easydict`) without requiring the full legacy SMART training environment.
 
 ## Resume Behavior
 - Training auto-resumes from the latest checkpoint in `SMART_BASELINE_CKPT_DIR` when `run.resume_from_existing=true` and no explicit checkpoint override is passed.

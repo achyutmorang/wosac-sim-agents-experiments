@@ -183,12 +183,28 @@ def _safe_repo_rev(repo_dir: Path) -> str:
         return "unknown"
 
 
+def _is_git_worktree(path: Path) -> bool:
+    git_dir = path / ".git"
+    return git_dir.is_dir() or git_dir.is_file()
+
+
 def _sync_git_repo(repo_url: str, repo_branch: str, repo_dir: Path) -> Dict[str, Any]:
     if repo_dir.exists():
-        subprocess.run(["git", "-C", str(repo_dir), "fetch", "origin"], check=True)
-        subprocess.run(["git", "-C", str(repo_dir), "checkout", repo_branch], check=True)
-        subprocess.run(["git", "-C", str(repo_dir), "pull", "--ff-only", "origin", repo_branch], check=True)
-        mode = "updated"
+        if _is_git_worktree(repo_dir):
+            subprocess.run(["git", "-C", str(repo_dir), "fetch", "origin"], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "checkout", repo_branch], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "pull", "--ff-only", "origin", repo_branch], check=True)
+            mode = "updated"
+        else:
+            subprocess.run(["git", "-C", str(repo_dir), "init"], check=True)
+            remotes = subprocess.check_output(["git", "-C", str(repo_dir), "remote"], text=True).split()
+            if "origin" in remotes:
+                subprocess.run(["git", "-C", str(repo_dir), "remote", "set-url", "origin", repo_url], check=True)
+            else:
+                subprocess.run(["git", "-C", str(repo_dir), "remote", "add", "origin", repo_url], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "fetch", "origin"], check=True)
+            subprocess.run(["git", "-C", str(repo_dir), "checkout", "-B", repo_branch, f"origin/{repo_branch}"], check=True)
+            mode = "initialized_existing_dir"
     else:
         repo_dir.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["git", "clone", "--depth", "1", "-b", repo_branch, repo_url, str(repo_dir)], check=True)

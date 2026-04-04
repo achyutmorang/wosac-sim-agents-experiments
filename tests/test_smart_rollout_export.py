@@ -3,6 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
+from src.platform.smart_rollout_contract import require_official_rollout_count
 from src.platform.smart_rollout_paths import normalize_dataset_paths, normalize_path_value
 
 
@@ -35,3 +38,24 @@ def test_normalize_dataset_paths_updates_dataset_entries(tmp_path: Path) -> None
     assert out.Dataset.val_raw_dir == [str((base / "data/valid_demo").resolve())]
     assert out.Dataset.val_processed_dir is None
     assert out.Dataset.train_raw_dir == "/abs/train"
+
+
+def test_require_official_rollout_count_rejects_nonstandard_count_for_validation_inputs() -> None:
+    with pytest.raises(ValueError, match="requires rollout_count=32"):
+        require_official_rollout_count(
+            rollout_count=4,
+            scenario_proto_path="",
+            scenario_proto_dir="",
+            scenario_tfrecords="gs://bucket/validation.tfrecord-*",
+            strict_validation=False,
+        )
+
+
+def test_require_official_rollout_count_allows_default_count() -> None:
+    require_official_rollout_count(
+        rollout_count=32,
+        scenario_proto_path="",
+        scenario_proto_dir="",
+        scenario_tfrecords="gs://bucket/validation.tfrecord-*",
+        strict_validation=False,
+    )

@@ -23,6 +23,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.platform.smart_rollout_paths import normalize_dataset_paths, normalize_path_value
+from src.platform.smart_rollout_contract import (
+    DEFAULT_OFFICIAL_ROLLOUT_COUNT,
+    require_official_rollout_count,
+)
 from src.platform.smart_rollout_submission import (
     build_joint_scene_spec,
     build_scenario_rollouts_spec,
@@ -33,7 +37,7 @@ from src.platform.smart_rollout_submission import (
 
 
 CURRENT_TIME_INDEX_FALLBACK = 10
-DEFAULT_ROLLOUT_COUNT = 32
+DEFAULT_ROLLOUT_COUNT = DEFAULT_OFFICIAL_ROLLOUT_COUNT
 
 
 def parse_args() -> argparse.Namespace:
@@ -265,6 +269,13 @@ def main() -> int:
     started_at = time.time()
 
     try:
+        require_official_rollout_count(
+            rollout_count=int(args.rollout_count),
+            scenario_proto_path=args.scenario_proto_path,
+            scenario_proto_dir=args.scenario_proto_dir,
+            scenario_tfrecords=args.scenario_tfrecords,
+            strict_validation=bool(args.strict_validation),
+        )
         _prepare_imports(smart_repo_dir, repo_root=REPO_ROOT)
         _seed_all(int(args.seed))
         config, dataset, dataloader, model = _build_dataset(args.config, smart_repo_dir=smart_repo_dir)

@@ -7,6 +7,7 @@ import json
 import os
 import random
 import sys
+import time
 import traceback
 from importlib import metadata
 from pathlib import Path
@@ -47,6 +48,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scenario-proto-dir", type=str, default="")
     parser.add_argument("--scenario-tfrecords", type=str, default="")
     parser.add_argument("--strict-validation", action="store_true")
+    parser.add_argument("--max-scenarios", type=int, default=0)
+    parser.add_argument("--progress-every", type=int, default=25)
+    parser.add_argument("--flush-every", type=int, default=25)
+    parser.add_argument("--progress-json", type=str, default="")
     return parser.parse_args()
 
 
@@ -208,10 +213,56 @@ def _write_submission(*, rollout_specs: Sequence[Dict[str, Any]], output_path: P
     output_path.write_bytes(payload.SerializeToString())
 
 
+def _progress_path_for(output_path: Path, override: str) -> Path:
+    if str(override).strip():
+        return Path(str(override)).expanduser()
+    return Path(f"{output_path}.progress.json")
+
+
+def _write_progress(
+    *,
+    progress_path: Path,
+    status: str,
+    output_path: Path,
+    processed_scenarios: int,
+    total_scenarios: int,
+    rollout_count: int,
+    last_scenario_id: str,
+    output_written: bool,
+    output_size: int,
+    started_at: float,
+    checkpoint_path: str,
+    config_path: str,
+    error_type: str = "",
+    error: str = "",
+) -> None:
+    elapsed = max(time.time() - float(started_at), 0.0)
+    payload = {
+        "status": str(status),
+        "processed_scenarios": int(processed_scenarios),
+        "total_scenarios": int(total_scenarios),
+        "rollout_count": int(rollout_count),
+        "last_scenario_id": str(last_scenario_id),
+        "output_path": str(output_path),
+        "output_exists": bool(output_path.exists()),
+        "output_written": bool(output_written),
+        "output_size": int(output_size),
+        "elapsed_seconds": float(round(elapsed, 3)),
+        "checkpoint": str(checkpoint_path),
+        "config": str(config_path),
+        "error_type": str(error_type),
+        "error": str(error),
+    }
+    progress_path.parent.mkdir(parents=True, exist_ok=True)
+    progress_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
     smart_repo_dir = Path(args.smart_repo_dir).expanduser().resolve()
     output_path = Path(args.output_path).expanduser()
+    progress_path = _progress_path_for(output_path, args.progress_json)
+    started_at = time.time()
 
     try:
         _prepare_imports(smart_repo_dir, repo_root=REPO_ROOT)
@@ -231,9 +282,46 @@ def main() -> int:
         model.eval()
         model.inference_token = True
 
+        dataset_size = int(len(dataset))
+        total_scenarios = int(args.max_scenarios) if int(args.max_scenarios) > 0 else dataset_size
+        total_scenarios = min(total_scenarios, dataset_size)
+        progress_every = max(int(args.progress_every), 1)
+        flush_every = max(int(args.flush_every), 1)
+        print(
+            "[smart-rollout-export] starting export "
+            + json.dumps(
+                {
+                    "dataset_size": dataset_size,
+                    "scenario_limit": total_scenarios,
+                    "rollout_count": int(args.rollout_count),
+                    "progress_every": progress_every,
+                    "flush_every": flush_every,
+                    "output_path": str(output_path),
+                    "progress_json": str(progress_path),
+                },
+                sort_keys=True,
+            )
+        )
+        _write_progress(
+            progress_path=progress_path,
+            status="running",
+            output_path=output_path,
+            processed_scenarios=0,
+            total_scenarios=total_scenarios,
+            rollout_count=int(args.rollout_count),
+            last_scenario_id="",
+            output_written=False,
+            output_size=0,
+            started_at=started_at,
+            checkpoint_path=args.pretrain_ckpt,
+            config_path=args.config,
+        )
+
         rollout_specs: List[Dict[str, Any]] = []
         scenario_ids: List[str] = []
         for scenario_index, raw_batch in enumerate(dataloader):
+            if scenario_index >= total_scenarios:
+                break
             scenario_joint_scenes: List[Dict[str, Any]] = []
             scenario_id = ""
             for rollout_idx in range(int(args.rollout_count)):
@@ -252,6 +340,43 @@ def main() -> int:
                 )
             )
             scenario_ids.append(scenario_id)
+            processed_scenarios = scenario_index + 1
+
+            if (processed_scenarios % progress_every) == 0 or processed_scenarios == total_scenarios:
+                elapsed = max(time.time() - started_at, 1e-6)
+                rate = float(processed_scenarios) / elapsed
+                eta = float(total_scenarios - processed_scenarios) / rate if rate > 0 else None
+                print(
+                    "[smart-rollout-export] progress "
+                    + json.dumps(
+                        {
+                            "processed_scenarios": processed_scenarios,
+                            "total_scenarios": total_scenarios,
+                            "last_scenario_id": scenario_id,
+                            "elapsed_seconds": round(elapsed, 2),
+                            "scenarios_per_second": round(rate, 4),
+                            "eta_seconds": round(eta, 2) if eta is not None else None,
+                        },
+                        sort_keys=True,
+                    )
+                )
+
+            if (processed_scenarios % flush_every) == 0 or processed_scenarios == total_scenarios:
+                _write_submission(rollout_specs=rollout_specs, output_path=output_path)
+                _write_progress(
+                    progress_path=progress_path,
+                    status="running",
+                    output_path=output_path,
+                    processed_scenarios=processed_scenarios,
+                    total_scenarios=total_scenarios,
+                    rollout_count=int(args.rollout_count),
+                    last_scenario_id=scenario_id,
+                    output_written=True,
+                    output_size=output_path.stat().st_size if output_path.exists() else 0,
+                    started_at=started_at,
+                    checkpoint_path=args.pretrain_ckpt,
+                    config_path=args.config,
+                )
 
         scenarios_by_id = _load_validation_scenarios(
             scenario_ids=scenario_ids,
@@ -283,7 +408,22 @@ def main() -> int:
             "torch": _safe_version("torch"),
             "torch_geometric": _safe_version("torch-geometric"),
             "waymo_open_dataset": _safe_version("waymo-open-dataset-tf-2-12-0"),
+            "progress_json": str(progress_path),
         }
+        _write_progress(
+            progress_path=progress_path,
+            status="complete",
+            output_path=output_path,
+            processed_scenarios=len(rollout_specs),
+            total_scenarios=total_scenarios,
+            rollout_count=int(args.rollout_count),
+            last_scenario_id=scenario_ids[-1] if scenario_ids else "",
+            output_written=output_path.exists(),
+            output_size=output_path.stat().st_size if output_path.exists() else 0,
+            started_at=started_at,
+            checkpoint_path=args.pretrain_ckpt,
+            config_path=args.config,
+        )
         print("[smart-rollout-export] export complete")
         print(json.dumps(summary, indent=2, sort_keys=True))
         return 0
@@ -301,7 +441,24 @@ def main() -> int:
             "waymo_open_dataset": _safe_version("waymo-open-dataset-tf-2-12-0"),
             "error_type": type(exc).__name__,
             "error": str(exc),
+            "progress_json": str(progress_path),
         }
+        _write_progress(
+            progress_path=progress_path,
+            status="failed",
+            output_path=output_path,
+            processed_scenarios=len(locals().get("rollout_specs", [])),
+            total_scenarios=int(locals().get("total_scenarios", 0)),
+            rollout_count=int(args.rollout_count),
+            last_scenario_id=(locals().get("scenario_ids", [])[-1] if locals().get("scenario_ids", []) else ""),
+            output_written=output_path.exists(),
+            output_size=output_path.stat().st_size if output_path.exists() else 0,
+            started_at=started_at,
+            checkpoint_path=args.pretrain_ckpt,
+            config_path=args.config,
+            error_type=type(exc).__name__,
+            error=str(exc),
+        )
         print("[smart-rollout-export] export failed")
         print(json.dumps(debug_payload, indent=2, sort_keys=True))
         traceback.print_exc()

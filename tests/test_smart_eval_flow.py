@@ -62,6 +62,10 @@ def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: 
             },
         ],
         metrics_dir=str(metrics_dir),
+        n_rollouts=8,
+        max_scenarios=16,
+        progress_every=4,
+        flush_every=2,
     )
 
     assert bundle.summary["status"] == "ready"
@@ -75,7 +79,12 @@ def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: 
     assert "python " in baseline["rollout_cmd"]
     assert "scripts/smart_rollout_export.py" in baseline["rollout_cmd"]
     assert "--output-path " in baseline["rollout_cmd"]
+    assert "--rollout-count 8" in baseline["rollout_cmd"]
+    assert "--max-scenarios 16" in baseline["rollout_cmd"]
+    assert "--progress-every 4" in baseline["rollout_cmd"]
+    assert "--flush-every 2" in baseline["rollout_cmd"]
     assert baseline["scenario_rollouts_path"].endswith("smart_baseline.binproto")
+    assert baseline["progress_json_path"].endswith("smart_baseline.progress.json")
     assert "SMART_TEMP=1.1 python val.py" in variant["validate_cmd"]
     assert "SMART_TEMP=1.1 python " in variant["rollout_cmd"]
     assert variant["metrics"]["realism_meta_metric"] == 0.764

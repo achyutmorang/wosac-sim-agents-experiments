@@ -328,6 +328,10 @@ def _build_rollout_cmd(
     scenario_proto_dir: str,
     scenario_tfrecords: str,
     strict_validation: bool,
+    max_scenarios: int,
+    progress_every: int,
+    flush_every: int,
+    progress_json_path: str,
 ) -> str:
     script_path = repo_root / "scripts" / "smart_rollout_export.py"
     parts = [
@@ -351,6 +355,14 @@ def _build_rollout_cmd(
         parts[-1] += f" --scenario-tfrecords {_q(scenario_tfrecords)}"
     if strict_validation:
         parts[-1] += " --strict-validation"
+    if int(max_scenarios) > 0:
+        parts[-1] += f" --max-scenarios {int(max_scenarios)}"
+    if int(progress_every) > 0:
+        parts[-1] += f" --progress-every {int(progress_every)}"
+    if int(flush_every) > 0:
+        parts[-1] += f" --flush-every {int(flush_every)}"
+    if str(progress_json_path).strip():
+        parts[-1] += f" --progress-json {_q(progress_json_path)}"
     rollout_cmd = " && ".join(parts)
     return _inject_env(rollout_cmd, env_map=env_map, needle="python ")
 
@@ -379,6 +391,9 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
     compatibility_keys = _normalize_key_list(kwargs.get("compatibility_keys"), fallback=DEFAULT_COMPATIBILITY_KEYS)
     rollout_count = int(kwargs.get("n_rollouts", 32))
     sim_seed = int(kwargs.get("seed", 2))
+    max_scenarios = int(kwargs.get("max_scenarios", 0))
+    progress_every = int(kwargs.get("progress_every", 25))
+    flush_every = int(kwargs.get("flush_every", 25))
     scenario_proto_path = str(kwargs.get("scenario_proto_path", "")).strip()
     scenario_proto_dir = str(kwargs.get("scenario_proto_dir", "")).strip()
     scenario_tfrecords = str(kwargs.get("scenario_tfrecords", "")).strip()
@@ -459,6 +474,7 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
                 / "rollout_protos"
                 / f"{model_id}.binproto"
             )
+        progress_json_path = str(Path(scenario_rollouts_path).with_suffix(".progress.json"))
         validate_cmd = _build_validate_cmd(
             smart_repo_dir=smart_repo_dir,
             val_config=smart_val_config,
@@ -478,6 +494,10 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
             scenario_proto_dir=scenario_proto_dir,
             scenario_tfrecords=scenario_tfrecords,
             strict_validation=strict_rollout_validation,
+            max_scenarios=max_scenarios,
+            progress_every=progress_every,
+            flush_every=flush_every,
+            progress_json_path=progress_json_path,
         )
 
         metrics = {k: None for k in _METRIC_ALIASES}
@@ -545,6 +565,7 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
                 "validate_cmd": validate_cmd,
                 "rollout_cmd": rollout_cmd,
                 "scenario_rollouts_path": scenario_rollouts_path,
+                "progress_json_path": progress_json_path,
                 "manifest_json": str(manifest_path) if manifest_path is not None else "",
                 "manifest_source": manifest_source,
                 "manifest_sha256": manifest_hash,
@@ -593,6 +614,9 @@ def run_smart_eval_flow(**kwargs: Any) -> SmartEvalBundle:
         "strict_rollout_validation": strict_rollout_validation,
         "n_rollouts": rollout_count,
         "seed": sim_seed,
+        "max_scenarios": max_scenarios,
+        "progress_every": progress_every,
+        "flush_every": flush_every,
         "scenario_proto_path": scenario_proto_path,
         "scenario_proto_dir": scenario_proto_dir,
         "scenario_tfrecords": scenario_tfrecords,

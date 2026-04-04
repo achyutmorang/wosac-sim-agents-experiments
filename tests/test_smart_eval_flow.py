@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from src.workflows import (
+    load_json_mapping,
     run_smart_comparative_flow,
     run_smart_eval_flow,
     write_simulation_manifest,
@@ -88,6 +89,13 @@ def test_smart_eval_flow_builds_validate_commands_and_ingests_metrics(tmp_path: 
     assert "SMART_TEMP=1.1 python val.py" in variant["validate_cmd"]
     assert "SMART_TEMP=1.1 python " in variant["rollout_cmd"]
     assert variant["metrics"]["realism_meta_metric"] == 0.764
+
+
+def test_workflows_barrel_exports_load_json_mapping(tmp_path: Path) -> None:
+    payload = {"status": "ok", "value": 1}
+    path = tmp_path / "payload.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    assert load_json_mapping(path) == payload
 
 
 def test_smart_comparative_flow_selects_best_feasible_candidate(tmp_path: Path) -> None:

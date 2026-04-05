@@ -7,11 +7,13 @@ Reproduce SMART baseline with a thin wrapper and evaluate under WOSAC-aligned re
 - Data prep: `experiments/smart-baseline/notebooks/smart_data_prep_colab.ipynb`
 - Training: `experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb`
 - Baseline eval: `experiments/smart-baseline/notebooks/smart_baseline_eval_colab.ipynb`
+- Visualization: `experiments/smart-baseline/notebooks/smart_baseline_visualize_colab.ipynb`
 
 Open in Colab:
 - https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart_data_prep_colab.ipynb
 - https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart-baseline_colab.ipynb
 - https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart_baseline_eval_colab.ipynb
+- https://colab.research.google.com/github/achyutmorang/wosac-sim-agents-experiments/blob/main/experiments/smart-baseline/notebooks/smart_baseline_visualize_colab.ipynb
 
 ## Workflow Entrypoint
 - `src/workflows/smart_baseline_flow.py`
@@ -51,6 +53,7 @@ Set profile in notebook/script:
 - `smart_data_prep_colab.ipynb`: GCS staging, SMART preprocessing, Drive persistence.
 - `smart-baseline_colab.ipynb`: checkpoint training only.
 - `smart_baseline_eval_colab.ipynb`: rollout export plus official metrics only.
+- `smart_baseline_visualize_colab.ipynb`: optional MP4 rendering, scenario selection, token-step overlay.
 
 ## GCS Data Staging (Data Prep Notebook)
 - Default behavior stages WOMD shards from Waymo GCS to local Colab storage under `SMART.raw_data_root`.

@@ -35,6 +35,15 @@ from .model_eval_contract import (
 )
 from .run_manifest_utils import build_training_run_manifest, collect_package_versions, resolve_git_commit, write_json
 from .wosac_official_metrics import compute_official_metrics_from_rollouts
+from .smart_visualization import (
+    DEFAULT_SELECTION_STRATEGY as DEFAULT_VISUALIZATION_SELECTION_STRATEGY,
+    choose_focal_object_id,
+    find_processed_scenario_file,
+    load_visualization_metrics,
+    rank_visualization_candidates,
+    render_smart_rollout_video,
+    select_visualization_scenario,
+)
 from src.experiments import (
     ExperimentPack,
     experiment_pack_paths,
@@ -84,6 +93,13 @@ __all__ = [
     "resolve_git_commit",
     "write_json",
     "compute_official_metrics_from_rollouts",
+    "DEFAULT_VISUALIZATION_SELECTION_STRATEGY",
+    "load_visualization_metrics",
+    "rank_visualization_candidates",
+    "select_visualization_scenario",
+    "choose_focal_object_id",
+    "find_processed_scenario_file",
+    "render_smart_rollout_video",
     "ExperimentPack",
     "list_experiment_packs",
     "get_experiment_pack",

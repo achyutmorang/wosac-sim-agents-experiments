@@ -13,7 +13,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
 
-from src.platform.smart_rollout_paths import normalize_dataset_paths, normalize_path_value
+from src.platform.smart_rollout_paths import normalize_dataset_paths
 from src.workflows.wosac_official_metrics import _load_rollouts, _load_scenarios
 
 
@@ -359,6 +359,26 @@ def _resolve_rollout_seed(*, base_seed: int, scenario_export_index: int, rollout
     return int(base_seed) + int(scenario_export_index) * 1000 + int(rollout_index)
 
 
+def _resolve_config_path(*, repo_root: Path, smart_repo_dir: Path, value: str) -> Path:
+    text = str(value).strip()
+    if not text:
+        raise ValueError("SMART visualization requires a non-empty config path.")
+
+    candidate = Path(text).expanduser()
+    if candidate.is_absolute():
+        return candidate.resolve()
+
+    repo_candidate = (repo_root / candidate).resolve()
+    if repo_candidate.exists():
+        return repo_candidate
+
+    smart_candidate = (smart_repo_dir / candidate).resolve()
+    if smart_candidate.exists():
+        return smart_candidate
+
+    return repo_candidate
+
+
 def _prepare_single_batch(
     *,
     smart_repo_dir: Path,
@@ -383,7 +403,7 @@ def _prepare_single_batch(
     from smart.utils.config import load_config_act  # pylint: disable=import-outside-toplevel
     from smart.utils.log import Logging  # pylint: disable=import-outside-toplevel
 
-    resolved_config_path = normalize_path_value(config_path, base_dir=smart_repo_dir)
+    resolved_config_path = _resolve_config_path(repo_root=repo_root, smart_repo_dir=smart_repo_dir, value=config_path)
     config = load_config_act(str(resolved_config_path))
     config = normalize_dataset_paths(config, smart_repo_dir=smart_repo_dir)
     model_config = config.Model

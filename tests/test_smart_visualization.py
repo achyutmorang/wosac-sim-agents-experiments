@@ -8,6 +8,7 @@ from src.workflows import (
     rank_visualization_candidates,
     select_visualization_scenario,
 )
+from src.workflows.smart_visualization import _normalize_agent_ids
 
 
 def test_rank_visualization_candidates_prefers_representative_safe() -> None:
@@ -87,6 +88,18 @@ def test_find_processed_scenario_file_prefers_split_dir(tmp_path: Path) -> None:
 
     resolved = find_processed_scenario_file(processed_root=root, scenario_id="abc123")
     assert resolved == target
+
+
+def test_normalize_agent_ids_unwraps_single_graph_batch_list() -> None:
+    assert _normalize_agent_ids([[101, 202, 303]]) == [101, 202, 303]
+
+
+def test_normalize_agent_ids_unwraps_scalar_rows() -> None:
+    assert _normalize_agent_ids([[101], [202], [303]]) == [101, 202, 303]
+
+
+def test_normalize_agent_ids_unwraps_repeated_row_ids() -> None:
+    assert _normalize_agent_ids([[101, 101], [202, 202]]) == [101, 202]
 
 
 class _State:

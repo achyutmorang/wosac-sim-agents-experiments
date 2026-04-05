@@ -359,6 +359,35 @@ def _resolve_rollout_seed(*, base_seed: int, scenario_export_index: int, rollout
     return int(base_seed) + int(scenario_export_index) * 1000 + int(rollout_index)
 
 
+def _normalize_agent_ids(agent_ids_raw: Any) -> List[int]:
+    value = agent_ids_raw.detach().cpu().tolist() if hasattr(agent_ids_raw, "detach") else agent_ids_raw
+    if hasattr(value, "tolist"):
+        value = value.tolist()
+
+    while isinstance(value, (list, tuple)) and len(value) == 1 and isinstance(value[0], (list, tuple)):
+        value = value[0]
+
+    if not isinstance(value, (list, tuple)):
+        return [int(value)]
+
+    out: List[int] = []
+    for item in value:
+        current = item.tolist() if hasattr(item, "tolist") else item
+        while isinstance(current, (list, tuple)):
+            if not current:
+                raise ValueError("Encountered empty agent id container in SMART batch.")
+            first = current[0]
+            if isinstance(first, (list, tuple)):
+                current = first
+                continue
+            if all(elem == first for elem in current):
+                current = first
+                break
+            raise TypeError(f"Unsupported nested SMART agent id shape: {current!r}")
+        out.append(int(current))
+    return out
+
+
 def _resolve_config_path(*, repo_root: Path, smart_repo_dir: Path, value: str) -> Path:
     text = str(value).strip()
     if not text:
@@ -483,11 +512,7 @@ def compute_smart_token_trace(
     batch = bundle["batch"]
     pred = bundle["pred"]
 
-    agent_ids_raw = batch["agent"]["id"]
-    if hasattr(agent_ids_raw, "detach"):
-        agent_ids = [int(v) for v in agent_ids_raw.detach().cpu().tolist()]
-    else:
-        agent_ids = [int(v) for v in list(agent_ids_raw)]
+    agent_ids = _normalize_agent_ids(batch["agent"]["id"])
     try:
         focal_index = agent_ids.index(int(focal_object_id))
     except ValueError as exc:

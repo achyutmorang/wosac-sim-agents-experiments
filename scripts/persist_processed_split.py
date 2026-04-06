@@ -53,6 +53,11 @@ def _copy_tree_fallback(src: Path, dst: Path) -> None:
 def sync_split(src: Path, dst: Path) -> str:
     if not src.exists() or not src.is_dir():
         raise FileNotFoundError(f"Missing processed split directory: {src}")
+    try:
+        if src.resolve() == dst.resolve():
+            return "already_durable"
+    except Exception:
+        pass
     dst.parent.mkdir(parents=True, exist_ok=True)
     if shutil.which("rsync"):
         commands = [

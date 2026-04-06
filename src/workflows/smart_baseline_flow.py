@@ -412,6 +412,7 @@ def _build_command_plan(
     deterministic_train: bool,
     train_launcher_path: str,
     smart_profile: str,
+    preprocess_max_shards: int,
 ) -> Dict[str, str]:
     if str(smart_profile).strip().lower() == "smoke":
         setup_cmd = " && ".join(
@@ -437,16 +438,24 @@ def _build_command_plan(
             f"python {_q(str((repo_root / 'scripts' / 'ensure_smart_preprocess_runtime.py').resolve()))}",
         ]
     )
+    preprocess_script = str((repo_root / "scripts" / "smart_preprocess_resumable.py").resolve())
+    preprocess_flags = [
+        f"--smart-repo-dir {_q(smart_repo_dir)}",
+        "--skip-existing",
+    ]
+    if int(preprocess_max_shards) > 0:
+        preprocess_flags.append(f"--max-shards {int(preprocess_max_shards)}")
 
     preprocess_train_cmd = " && ".join(
         [
             preprocess_runtime_setup,
-            f"cd {_q(smart_repo_dir)}",
             " ".join(
                 [
-                    "python data_preprocess.py",
+                    f"python {_q(preprocess_script)}",
                     f"--input_dir {_q(str(Path(raw_data_root) / 'training'))}",
                     f"--output_dir {_q(str(Path(processed_data_root) / 'training'))}",
+                    "--split training",
+                    *preprocess_flags,
                 ]
             ),
         ]
@@ -454,12 +463,13 @@ def _build_command_plan(
     preprocess_val_cmd = " && ".join(
         [
             preprocess_runtime_setup,
-            f"cd {_q(smart_repo_dir)}",
             " ".join(
                 [
-                    "python data_preprocess.py",
+                    f"python {_q(preprocess_script)}",
                     f"--input_dir {_q(str(Path(raw_data_root) / 'validation'))}",
                     f"--output_dir {_q(str(Path(processed_data_root) / 'validation'))}",
+                    "--split validation",
+                    *preprocess_flags,
                 ]
             ),
         ]
@@ -534,6 +544,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
     train_launcher_path = str(_resolve_path(repo_root, train_launcher_arg))
     sync_smart_repo = bool(kwargs.get("sync_smart_repo", False))
     resume_from_existing = bool(kwargs.get("resume_from_existing", True))
+    preprocess_max_shards = _safe_int(kwargs.get("smart_preprocess_max_shards", 0), 0)
 
     resume_resolution = resolve_resume_checkpoint(save_ckpt_path=save_ckpt_path, explicit_ckpt_path=ckpt_path)
     resolved_ckpt_path = ckpt_path
@@ -598,6 +609,7 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         deterministic_train=deterministic_train,
         train_launcher_path=train_launcher_path,
         smart_profile=smart_profile,
+        preprocess_max_shards=preprocess_max_shards,
     )
     data_manifest = _collect_data_manifest(raw_data_root=raw_data_root, processed_data_root=processed_data_root)
     checkpoint_manifest = _collect_checkpoint_manifest(
@@ -637,6 +649,8 @@ def run_smart_baseline_flow(**kwargs: Any) -> SmartBaselineFlowBundle:
         "smart_setup_mode": "modern_colab_smoke" if smart_profile.lower() == "smoke" else "exact_upstream",
         "smart_train_seed": int(train_seed),
         "smart_deterministic_train": bool(deterministic_train),
+        "smart_preprocess_mode": "resumable_shardwise",
+        "smart_preprocess_max_shards": int(preprocess_max_shards),
         "smart_env_lockfile": env_lockfile,
         "smart_train_launcher_path": train_launcher_path,
         "smart_train_config": train_config,

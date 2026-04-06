@@ -69,11 +69,15 @@ Set profile in notebook/script:
 - Preprocessed SMART samples should be treated as persisted assets, not ephemeral Colab files.
 - Recommended durable root: `/content/drive/MyDrive/wosac_experiments/datasets/waymo_processed`
 - Helper script: `scripts/persist_processed_split.py`
+- Resumable shard-wise preprocessor: `scripts/smart_preprocess_resumable.py`
 - Train/eval notebooks support `SMART_PROCESSED_DATA_ROOT` and rebind `/content/SMART/data/waymo_processed` to the persisted root when needed.
 
 ## Preprocess Resume Policy
-- Data prep notebook auto-detects existing processed `.pkl/.pickle` files.
-- Default behavior: preprocess only the selected splits and persist them immediately.
+- Data prep notebook now defaults to `SMART_RESUMABLE_PREPROCESS=1`, which points SMART preprocessing directly at the durable Drive root unless `SMART_PROCESSED_DATA_ROOT` is explicitly overridden.
+- Preprocessing runs shard-by-shard and writes durable marker JSON files under `<processed_split>/.preprocess_state/shards/`.
+- If Colab terminates mid-run, rerunning the notebook resumes from Drive by skipping completed shard markers and already-written scenario `.pkl/.pickle` files.
+- Optional chunking knob: `SMART_PREPROCESS_MAX_SHARDS_PER_RUN=<N>` processes only the next `N` pending raw shards in one Colab session. Use `0` for “all pending shards”.
+- Default behavior: preprocess only the selected splits and keep progress durable during the run instead of relying on a final copy step.
 - Training notebook refuses to preprocess; use the data-prep notebook instead.
 - Preprocess commands self-bootstrap their minimal runtime (`tensorflow`, `waymo_open_dataset`, `easydict`) without requiring the full legacy SMART training environment.
 

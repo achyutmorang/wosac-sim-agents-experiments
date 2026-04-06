@@ -32,6 +32,10 @@ def test_smart_baseline_flow_ready_without_sync(tmp_path: Path) -> None:
     assert "train_cmd" in bundle.command_plan
     assert "ensure_smart_preprocess_runtime.py" in bundle.command_plan["preprocess_train_cmd"]
     assert "ensure_smart_preprocess_runtime.py" in bundle.command_plan["preprocess_val_cmd"]
+    assert "smart_preprocess_resumable.py" in bundle.command_plan["preprocess_train_cmd"]
+    assert "--split training" in bundle.command_plan["preprocess_train_cmd"]
+    assert "--skip-existing" in bundle.command_plan["preprocess_train_cmd"]
+    assert "--split validation" in bundle.command_plan["preprocess_val_cmd"]
     assert "--seed 13" in bundle.command_plan["train_cmd"]
     assert "smart_train_repro.py" not in bundle.command_plan["train_cmd"]  # custom launcher path used in this test
     assert "python val.py" in bundle.command_plan["validate_cmd"]
@@ -141,6 +145,22 @@ def test_smart_baseline_flow_auto_resume_uses_latest_checkpoint(tmp_path: Path) 
     assert str(ckpt_new) in bundle.command_plan["train_cmd"]
     assert bundle.summary["smart_ckpt_path"] == str(ckpt_new)
     assert bundle.summary["resume_resolution"]["source"] == "auto_latest"
+
+
+def test_smart_baseline_flow_preprocess_can_limit_shards_per_run(tmp_path: Path) -> None:
+    bundle = run_smart_baseline_flow(
+        repo_root=tmp_path,
+        persist_root=tmp_path / "persist",
+        run_prefix="smart_baseline",
+        run_name="dev",
+        run_tag="20260302T000000Z",
+        sync_smart_repo=False,
+        smart_preprocess_max_shards=7,
+    )
+
+    assert "--max-shards 7" in bundle.command_plan["preprocess_train_cmd"]
+    assert "--max-shards 7" in bundle.command_plan["preprocess_val_cmd"]
+    assert bundle.summary["smart_preprocess_max_shards"] == 7
 
 
 def test_smart_baseline_flow_sync_bootstraps_existing_non_git_dir(tmp_path: Path) -> None:

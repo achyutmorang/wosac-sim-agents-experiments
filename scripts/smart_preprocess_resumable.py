@@ -16,11 +16,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Preprocess SMART data shard-by-shard with durable progress markers and resume support."
     )
-    parser.add_argument("--smart-repo-dir", required=True)
-    parser.add_argument("--input-dir", required=True)
-    parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--state-dir", default="")
-    parser.add_argument("--progress-json", default="")
+    parser.add_argument("--smart-repo-dir", "--smart_repo_dir", dest="smart_repo_dir", required=True)
+    parser.add_argument("--input-dir", "--input_dir", dest="input_dir", required=True)
+    parser.add_argument("--output-dir", "--output_dir", dest="output_dir", required=True)
+    parser.add_argument("--state-dir", "--state_dir", dest="state_dir", default="")
+    parser.add_argument("--progress-json", "--progress_json", dest="progress_json", default="")
     parser.add_argument("--split", choices=("training", "validation", "testing"), required=True)
     parser.add_argument("--max-shards", type=int, default=0)
     parser.add_argument("--log-every", type=int, default=25)

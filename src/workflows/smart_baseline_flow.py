@@ -452,8 +452,8 @@ def _build_command_plan(
             " ".join(
                 [
                     f"python {_q(preprocess_script)}",
-                    f"--input_dir {_q(str(Path(raw_data_root) / 'training'))}",
-                    f"--output_dir {_q(str(Path(processed_data_root) / 'training'))}",
+                    f"--input-dir {_q(str(Path(raw_data_root) / 'training'))}",
+                    f"--output-dir {_q(str(Path(processed_data_root) / 'training'))}",
                     "--split training",
                     *preprocess_flags,
                 ]
@@ -466,8 +466,8 @@ def _build_command_plan(
             " ".join(
                 [
                     f"python {_q(preprocess_script)}",
-                    f"--input_dir {_q(str(Path(raw_data_root) / 'validation'))}",
-                    f"--output_dir {_q(str(Path(processed_data_root) / 'validation'))}",
+                    f"--input-dir {_q(str(Path(raw_data_root) / 'validation'))}",
+                    f"--output-dir {_q(str(Path(processed_data_root) / 'validation'))}",
                     "--split validation",
                     *preprocess_flags,
                 ]

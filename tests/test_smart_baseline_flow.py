@@ -34,6 +34,8 @@ def test_smart_baseline_flow_ready_without_sync(tmp_path: Path) -> None:
     assert "ensure_smart_preprocess_runtime.py" in bundle.command_plan["preprocess_val_cmd"]
     assert "smart_preprocess_resumable.py" in bundle.command_plan["preprocess_train_cmd"]
     assert "--split training" in bundle.command_plan["preprocess_train_cmd"]
+    assert "--input-dir" in bundle.command_plan["preprocess_train_cmd"]
+    assert "--output-dir" in bundle.command_plan["preprocess_train_cmd"]
     assert "--skip-existing" in bundle.command_plan["preprocess_train_cmd"]
     assert "--split validation" in bundle.command_plan["preprocess_val_cmd"]
     assert "--seed 13" in bundle.command_plan["train_cmd"]

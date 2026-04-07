@@ -41,9 +41,12 @@ def test_smart_baseline_flow_ready_without_sync(tmp_path: Path) -> None:
     assert "--seed 13" in bundle.command_plan["train_cmd"]
     assert "smart_train_repro.py" not in bundle.command_plan["train_cmd"]  # custom launcher path used in this test
     assert "python val.py" in bundle.command_plan["validate_cmd"]
-    assert str(lockfile) in bundle.command_plan["setup_cmd"]
+    assert "ensure_smart_train_runtime.py" in bundle.command_plan["setup_cmd"]
+    assert str(lockfile) not in bundle.command_plan["setup_cmd"]
+    assert "requirements-smart-exact-cu113.txt" not in bundle.command_plan["setup_cmd"]
     assert bundle.summary["smart_train_seed"] == 13
     assert bundle.summary["smart_profile"] == "paper_repro"
+    assert bundle.summary["smart_setup_mode"] == "modern_colab_runtime"
     assert "eval.py" not in bundle.command_plan["validate_cmd"]
     assert "summary_json" in bundle.artifacts
     assert "command_plan_json" in bundle.artifacts
